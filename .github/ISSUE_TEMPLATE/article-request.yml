@@ -8,28 +8,26 @@ body:
         内容を確認してから、このIssueに `article-approved` ラベルを付けてください。
         ラベルを付けるまでは記事・PRは作成されません。
   - type: input
-    id: reader
+    id: summary
     attributes:
-      label: 想定読者
-      placeholder: 例: ローカルAIを初めて試すWindowsユーザー
+      label: 記事の要約
+      description: トップページに表示する短い説明です。
+      placeholder: 例: ローカルAIを初めて試すための基本構成を整理します。
     validations:
       required: true
   - type: textarea
-    id: outline
+    id: article_body
     attributes:
-      label: 記事に入れたい要点
-      description: 3〜5点を目安に、事実として書いてよい内容だけを入力してください。
+      label: 記事本文（Markdown）
+      description: ChatGPTなどで作成・確認したMarkdown本文を貼り付けてください。HTMLは貼り付けないでください。
       placeholder: |
-        - 要点1
-        - 要点2
-        - 要点3
+        ## 見出し
+        本文を入力します。
+
+        - 箇条書き1
+        - 箇条書き2
     validations:
       required: true
-  - type: textarea
-    id: sources
-    attributes:
-      label: 根拠・公式ソース
-      description: 仕様、価格、手順などの事実を扱う場合は公式URLを入力してください。
   - type: textarea
     id: affiliate_links
     attributes:
@@ -42,5 +40,5 @@ body:
       options:
         - label: 入力内容は公開してよく、個人情報・秘密情報を含みません。
           required: true
-        - label: 実体験、口コミ、価格、収益、ランキングなどを根拠なく作成しないことを理解しています。
+        - label: 実体験、口コミ、価格、収益、ランキングなどを根拠なく記載していません。
           required: true
