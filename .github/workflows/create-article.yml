@@ -59,8 +59,6 @@ jobs:
           ARTICLE_ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
           ARTICLE_ISSUE_TITLE: ${{ steps.issue.outputs.title }}
           ARTICLE_ISSUE_BODY: ${{ steps.issue.outputs.body }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-5.6-luna' }}
         run: node scripts/generate-article.mjs
 
       - name: Create draft pull request
