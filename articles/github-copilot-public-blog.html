@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>GitHub Copilotで公開ブログ記事を安全に作る設定 | AI・PC活用ブログ</title>
+	<meta name="description" content="PublicのGitHub Pagesブログで、VS CodeのGitHub Copilotに記事作成を任せるときの安全な指示ファイル、確認項目、公開前レビューを解説します。">
+	<style>
+		:root { --ink:#202a35; --muted:#657382; --line:#dbe3e8; --paper:#fff; --canvas:#f3f6f5; --accent:#0b756c; --accent-dark:#07534e; --accent-soft:#e4f3ef; --code:#18232b; }
+		* { box-sizing:border-box; }
+		body { margin:0; color:var(--ink); background:var(--canvas); font-family:"Noto Sans JP", "Yu Gothic", sans-serif; line-height:1.85; }
+		header { padding:22px 20px; color:#fff; background:linear-gradient(135deg,#123b46 0%,#07534e 55%,#0b756c 100%); }
+		.header-inner, main, footer > div { width:min(920px,100%); margin:0 auto; }
+		header a { color:#d8f4ed; font-size:14px; text-decoration:none; }
+		header a:hover, a:hover { text-decoration:underline; }
+		main { padding:54px 20px 70px; }
+		.article-header, article, .notice { background:var(--paper); border:1px solid var(--line); border-radius:10px; }
+		.article-header, article { padding:38px 42px; }
+		.eyebrow { margin:0 0 12px; color:var(--accent); font-size:13px; font-weight:700; letter-spacing:.08em; }
+		h1, h2, h3 { line-height:1.4; }
+		h1 { margin:0; font-size:clamp(28px,5vw,42px); }
+		h2 { margin:0 0 22px; font-size:27px; }
+		h3 { margin:30px 0 10px; font-size:20px; }
+		p { margin:0 0 18px; }
+		.lead { margin:20px 0 0; color:#50606b; font-size:17px; }
+		section + section { margin-top:46px; }
+		.notice { margin:22px 0; padding:18px 20px; border-left:4px solid var(--accent); border-radius:0 7px 7px 0; }
+		.notice strong { color:var(--accent-dark); }
+		.checklist { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1px; margin:20px 0; border:1px solid var(--line); background:var(--line); }
+		.checklist div { padding:14px 16px; background:#fbfcfc; }
+		.checklist strong { display:block; color:var(--accent-dark); }
+		pre { overflow-x:auto; margin:18px 0 24px; padding:20px; color:#e8f1f0; background:var(--code); border-radius:7px; font:14px/1.7 Consolas,"Courier New",monospace; }
+		code { padding:2px 5px; color:var(--accent-dark); background:#edf4f2; border-radius:3px; font-family:Consolas,"Courier New",monospace; font-size:.92em; }
+		pre code { padding:0; color:inherit; background:none; }
+		ul { padding-left:1.4em; }
+		li + li { margin-top:7px; }
+		a { color:var(--accent); }
+		footer { padding:30px 20px; color:#c7d5d8; background:#182b31; font-size:13px; }
+		@media (max-width:640px) { main { padding:28px 14px 48px; } .article-header, article { padding:26px 20px; } .checklist { grid-template-columns:1fr; } }
+	</style>
+</head>
+<body>
+	<header><div class="header-inner"><a href="../index.html">← AI・PC活用ブログに戻る</a></div></header>
+	<main>
+		<div class="article-header">
+			<p class="eyebrow">AI TOOLS / GITHUB COPILOT</p>
+			<h1>GitHub Copilotで公開ブログ記事を安全に作る設定</h1>
+			<p class="lead">GitHub PagesのPublicリポジトリでブログを運営するとき、VS CodeのGitHub Copilotに記事作成を任せるための指示ファイルと公開前チェックを整理します。</p>
+		</div>
+		<article>
+			<section>
+				<h2>Publicリポジトリでは「すべて公開」が前提</h2>
+				<p>GitHub Pagesで公開するブログは、HTMLや画像だけでなく、Publicリポジトリに入れたファイルとコミット履歴も閲覧できる前提で扱います。記事作成をAIに任せる場合も、公開してよい内容だけを作らせるルールが必要です。</p>
+				<div class="notice"><strong>入れてはいけないもの</strong><br>APIキー、パスワード、アクセストークン、ASPのログイン情報、秘密のURL、個人の住所・電話番号・非公開メールアドレスは、記事にも設定ファイルにも書きません。</div>
+			</section>
+			<section>
+				<h2>リポジトリ全体へ共通ルールを置く</h2>
+				<p>VS CodeのGitHub Copilotでは、リポジトリ直下の <code>.github/copilot-instructions.md</code> に書いた内容を、リポジトリ全体の指示として使えます。記事作成のたびに同じ注意を書かなくてよいのが利点です。</p>
+				<pre><code># Public GitHub Pages blog instructions
+
+- Treat every file and its Git history as publicly visible.
+- Never create or commit API keys, passwords, tokens, or personal data.
+- Do not invent affiliate links, prices, reviews, earnings, or testimonials.
+- Add a clear disclosure when an article contains affiliate links.
+- Flag time-sensitive claims for review when they cannot be verified from an official source.</code></pre>
+				<p>指示は長い規約集にするより、AIの判断を変える短いルールに絞ると使いやすくなります。Copilotの回答に指示ファイルが参照として表示されれば、読み込まれていることを確認できます。</p>
+			</section>
+			<section>
+				<h2>記事作成用と公開前確認用を分ける</h2>
+				<p>すべての会話に適用したい内容は共通指示に置き、手順がある作業はskillとして分けると管理しやすくなります。</p>
+				<div class="checklist">
+					<div><strong>記事作成skill</strong>読者、目的、根拠、広告表記を確認し、オリジナルの下書きを作ります。</div>
+					<div><strong>公開前レビューskill</strong>秘密情報、個人情報、広告表示、リンク、根拠不足、著作権上の懸念を確認します。</div>
+					<div><strong>共通指示</strong>Publicリポジトリで常に守る安全ルールを適用します。</div>
+					<div><strong>Pull Request</strong>レビュー結果と記事の差分を見てから、自分でマージします。</div>
+				</div>
+				<p>GitHub CopilotのAgent skillsは <code>.github/skills/skill-name/SKILL.md</code> に置けます。作成とレビューを分けると、公開前に「記事を書くモード」のまま見落とすリスクを減らせます。</p>
+			</section>
+			<section>
+				<h2>アフィリエイト記事で確認すること</h2>
+				<ul>
+					<li>アフィリエイトリンクがある記事には、読者が見つけやすい位置に広告利用を明記する。</li>
+					<li>実際に使っていない商品を「使った」と書かない。口コミ、収益、ランキング、比較結果を作らない。</li>
+					<li>価格、在庫、キャンペーン、仕様、法律など変わりやすい情報は、公開前に公式情報で確認する。</li>
+					<li>他サイトの商品説明、レビュー、画像、表をそのまま転載しない。引用する場合は必要最小限にして出典を示す。</li>
+					<li>「必ず稼げる」など、成果を保証する表現は使わない。</li>
+				</ul>
+				<p>広告表示は、サイトの一部だけでなく、読者が広告であることを明確に理解できるかという観点で考える必要があります。最新の考え方は<a href="https://www.caa.go.jp/policies/policy/representation/fair_labeling/faq/stealth_marketing/" target="_blank" rel="noopener">消費者庁のステルスマーケティングQ&amp;A</a>で確認できます。</p>
+			</section>
+			<section>
+				<h2>公開前の短いチェックリスト</h2>
+				<div class="notice"><strong>公開する前に、次を確認します。</strong>
+					<ul><li>秘密情報や個人情報を含まないか</li><li>広告表記が必要な記事に表示があるか</li><li>事実・リンク・価格などの根拠を確認したか</li><li>画像や文章を無断転載していないか</li><li>収益・効果・順位を断定していないか</li></ul>
+				</div>
+				<p>AIの出力は下書きとして扱い、PRで最終確認してから公開する運用が現実的です。特に未確認の情報は、削除するか「要確認」として自分で裏付けを取ります。</p>
+			</section>
+			<section>
+				<h2>まとめ</h2>
+				<p>GitHub Copilotは、記事の構成づくりや下書き作成を速くできます。ただし、Publicリポジトリでは秘密情報を守り、広告表示・事実確認・著作権を人が最終確認することが欠かせません。</p>
+				<p><code>.github/copilot-instructions.md</code> に共通ルールを置き、記事作成と公開前レビューを別skillにすることで、AIを使う記事更新を継続しやすくなります。</p>
+			</section>
+		</article>
+	</main>
+	<footer><div>© 2026 AI・PC活用ブログ</div></footer>
+</body>
+</html>
