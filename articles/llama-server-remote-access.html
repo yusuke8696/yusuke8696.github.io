@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>llama-serverを外出先から使う方法 | AI・PC活用ブログ</title>
+	<meta name="description" content="自宅PCで動くllama-serverを外出先のスマホやPCから安全に利用するための構成と注意点を、VPNを中心に解説します。">
+	<style>
+		:root { --ink:#202a35; --muted:#657382; --line:#dbe3e8; --paper:#fff; --canvas:#f3f6f5; --accent:#0b756c; --accent-dark:#07534e; --accent-soft:#e4f3ef; --code:#18232b; }
+		* { box-sizing:border-box; }
+		body { margin:0; color:var(--ink); background:var(--canvas); font-family:"Noto Sans JP","Yu Gothic",sans-serif; line-height:1.85; }
+		header { padding:22px 20px; color:#fff; background:linear-gradient(135deg,#123b46 0%,#07534e 55%,#0b756c 100%); }
+		.header-inner, main, footer>div { width:min(920px,100%); margin:0 auto; }
+		header a { color:#d8f4ed; font-size:14px; text-decoration:none; }
+		header a:hover { text-decoration:underline; }
+		main { padding:54px 20px 70px; }
+		.article-header, article, .notice { background:var(--paper); border:1px solid var(--line); border-radius:10px; }
+		.article-header { padding:38px 42px; }
+		.eyebrow { margin:0 0 12px; color:var(--accent); font-size:13px; font-weight:700; letter-spacing:.08em; }
+		h1,h2,h3 { line-height:1.4; }
+		h1 { margin:0; font-size:clamp(28px,5vw,42px); }
+		h2 { margin:0 0 22px; font-size:27px; }
+		h3 { margin:30px 0 10px; font-size:20px; }
+		p { margin:0 0 18px; }
+		.lead { margin:20px 0 0; color:#50606b; font-size:17px; }
+		article { margin-top:24px; padding:36px 42px; }
+		section+section { margin-top:46px; }
+		.flow { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:25px 0; }
+		.flow div { position:relative; padding:18px 10px; color:var(--accent-dark); background:var(--accent-soft); border-radius:7px; font-size:14px; font-weight:700; text-align:center; }
+		.flow div:not(:last-child)::after { position:absolute; top:50%; right:-9px; color:var(--accent); content:">"; transform:translateY(-50%); }
+		.comparison-wrap { overflow-x:auto; margin:22px 0 12px; border:1px solid var(--line); }
+		table { width:100%; min-width:680px; border-collapse:collapse; background:#fbfcfc; font-size:14px; }
+		th,td { padding:12px 14px; border:1px solid var(--line); text-align:left; vertical-align:top; }
+		thead th { color:#fff; background:var(--accent-dark); }
+		tbody th { color:var(--accent-dark); background:var(--accent-soft); }
+		pre { overflow-x:auto; margin:18px 0 24px; padding:20px; color:#e8f1f0; background:var(--code); border-radius:7px; font:14px/1.7 Consolas,"Courier New",monospace; }
+		code { padding:2px 5px; color:var(--accent-dark); background:#edf4f2; border-radius:3px; font-family:Consolas,"Courier New",monospace; font-size:.92em; }
+		pre code { padding:0; color:inherit; background:none; }
+		.notice { margin:22px 0; padding:18px 20px; border-left:4px solid var(--accent); border-radius:0 7px 7px 0; }
+		.notice strong { color:var(--accent-dark); }
+		.next-articles { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:24px; }
+		.next-articles a { display:block; padding:14px 16px; color:var(--accent-dark); background:var(--accent-soft); border-radius:7px; font-weight:700; text-decoration:none; }
+		.next-articles a:hover { text-decoration:underline; }
+		ul { padding-left:1.4em; }
+		li+li { margin-top:7px; }
+		a { color:var(--accent); }
+		footer { padding:30px 20px; color:#c7d5d8; background:#182b31; font-size:13px; }
+		@media (max-width:640px) {
+			main { padding:28px 14px 48px; }
+			.article-header,article { padding:26px 20px; }
+			.flow,.next-articles { grid-template-columns:1fr; }
+			.flow div:not(:last-child)::after { top:auto; right:50%; bottom:-14px; content:"v"; transform:translateX(50%); }
+		}
+	</style>
+</head>
+<body>
+	<header><div class="header-inner"><a href="../index.html">← AI・PC活用ブログに戻る</a></div></header>
+	<main>
+		<div class="article-header">
+			<p class="eyebrow">LOCAL AI / REMOTE ACCESS</p>
+			<h1>llama-serverを外出先から使う方法</h1>
+			<p class="lead">自宅PCで動くローカルLLMを、外出先のスマホや別のPCから安全に利用するための構成を整理します。</p>
+		</div>
+		<article>
+			<section>
+				<h2>127.0.0.1のままでは外部から接続できない</h2>
+				<p><code>llama-server</code>を<code>--host 127.0.0.1</code>で起動すると、接続できるのは同じPC上のアプリだけです。これはローカル利用では安全で扱いやすい一方、外出先の端末からは到達できません。</p>
+				<pre><code>llama-server -m model.gguf --host 127.0.0.1 --port 8080</code></pre>
+				<p>別端末から使うには、端末から自宅PCまでの接続経路を用意する必要があります。</p>
+			</section>
+			<section>
+				<h2>主な接続方法</h2>
+				<div class="comparison-wrap"><table>
+					<thead><tr><th>方法</th><th>用途</th><th>注意点</th></tr></thead>
+					<tbody>
+						<tr><th>同一LAN</th><td>自宅内の別PCやスマホ</td><td>外出先からは利用できない</td></tr>
+						<tr><th>VPN</th><td>許可した端末からの個人利用</td><td>各端末へのVPN設定が必要</td></tr>
+						<tr><th>トンネル</th><td>クラウド上の処理などから接続</td><td>認証、公開範囲、利用規約の確認が必要</td></tr>
+						<tr><th>直接ポート公開</th><td>インターネットから直接接続</td><td>攻撃対象になりやすく、個人用途では避けたい</td></tr>
+					</tbody>
+				</table></div>
+				<p>自分のスマホやノートPCから使うだけなら、まずVPN経由の構成を検討しやすいでしょう。</p>
+			</section>
+			<section>
+				<h2>おすすめはVPN経由の接続</h2>
+				<div class="flow" aria-label="VPN経由でローカルLLMへ接続する構成">
+					<div>外出先の端末</div><div>VPN</div><div>自宅PC</div><div>llama-server</div>
+				</div>
+				<p>VPNを使うと、参加を許可した端末同士をプライベートなネットワークとして接続できます。<code>llama-server</code>を不特定多数へ公開せず、自分の端末にアクセス範囲を限定できます。</p>
+				<div class="notice"><strong>0.0.0.0は「安全な公開設定」ではありません。</strong><br><code>--host 0.0.0.0</code>は外部インターフェースからの接続を受け付ける設定です。VPNやファイアウォールなどで接続元を制限したうえで使います。</div>
+			</section>
+			<section>
+				<h2>接続前に確認するポイント</h2>
+				<ul>
+					<li>VPN上のIPアドレスだけからポート8080へ到達できるか</li>
+					<li>OSのファイアウォールで接続元を必要な範囲に限定しているか</li>
+					<li>スマホや別PCから<code>/v1/models</code>など必要なAPIへ接続できるか</li>
+					<li>不要なポート開放やルーターの転送設定が残っていないか</li>
+				</ul>
+				<p>接続先クライアントには、VPN上の自宅PCのIPアドレスとポートを指定します。OpenAI互換APIを利用する場合のベースURLは、構成に応じて次のようになります。</p>
+				<pre><code>http://VPN上のIPアドレス:8080/v1</code></pre>
+				<p>利用するVPN製品やOSによって設定手順は異なります。製品の公式ドキュメントに従い、端末の参加承認やアクセス制御を設定してください。</p>
+			</section>
+			<section>
+				<h2>GitHub Actionsなどから使う場合</h2>
+				<p>GitHub Actionsの実行環境は自分のスマホやPCとは異なるため、個人端末向けVPNへそのまま参加できるとは限りません。外部サービスから呼び出す場合は、認証付きトンネルや自前の実行環境など、実行元に合う接続方法が必要です。</p>
+				<p>また、自宅PCが停止中ならローカルLLMも利用できません。継続利用する場合は、PCと<code>llama-server</code>の起動、異常終了時の再起動、アクセスログの確認も運用に含めます。</p>
+			</section>
+			<section>
+				<h2>まとめ</h2>
+				<p>ローカルLLMを外出先から使う場合は、<code>llama-server</code>のポートを直接インターネットへ公開するのではなく、VPNなどで接続できる端末を限定するのが基本です。</p>
+				<p>まず同一LAN内で動作を確認し、次にVPN経由へ広げると、問題の切り分けもしやすくなります。</p>
+				<nav class="next-articles" aria-label="関連記事">
+					<a href="qwen-install.html">事前準備: llama-serverの起動方法</a>
+					<a href="local-llm-pc.html">構築例: RTX 2060でローカルLLMを動かす</a>
+				</nav>
+			</section>
+		</article>
+	</main>
+	<footer><div>&copy; 2026 AI・PC活用ブログ</div></footer>
+</body>
+</html>
