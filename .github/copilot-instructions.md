@@ -15,7 +15,10 @@ This repository is a public GitHub Pages affiliate blog. Treat every file and it
 - Write blog articles in natural Japanese unless the owner asks for another language.
 - Keep claims accurate and distinguish fact, opinion, and personal experience. Do not fabricate product use, results, reviews, prices, statistics, sources, or testimonials.
 - Include a clear affiliate disclosure when an article contains affiliate links, for example: 「当サイトはアフィリエイト広告を利用しています。」
-- Do not make misleading earnings guarantees, medical/legal/financial promises, or unsupported comparisons.
+- Do not make misleading earnings guarantees, medical/legal/financial promises, or unsupported comparisons. In particular, do not state or imply that a side business will reliably earn money.
+- Do not copy text, product descriptions, reviews, tables, images, or charts from other sites. Use only original prose, short properly attributed quotations, or assets whose use is authorized.
+- Do not state time-sensitive facts such as prices, discounts, stock status, rankings, specifications, campaign terms, or laws unless they have been checked against a current official source. If they cannot be checked, flag them for owner review instead of guessing.
+- Use only sources that are relevant and credible. Provide the source URL for factual claims that the owner needs to verify before publication.
 - Produce only static-site files suitable for GitHub Pages. Do not add server-side code or require hidden runtime configuration for an article to work.
 
 ## Public-repository hygiene
