@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>RTX 2060でローカルLLM＋AI Agent環境を構築 | AI・PC活用ブログ</title>
+	<meta name="description" content="RTX 2060 6GBでQwythos-9B-v2をllama.cppで動かし、VS CodeとClineから利用するローカルAI Agent環境の構築方法を紹介します。">
+	<style>
+		:root {
+			--ink: #202a35;
+			--muted: #657382;
+			--line: #dbe3e8;
+			--paper: #ffffff;
+			--canvas: #f3f6f5;
+			--accent: #0b756c;
+			--accent-dark: #07534e;
+			--accent-soft: #e4f3ef;
+			--code: #18232b;
+		}
+
+		* { box-sizing: border-box; }
+
+		body {
+			margin: 0;
+			color: var(--ink);
+			background: var(--canvas);
+			font-family: "Noto Sans JP", "Yu Gothic", sans-serif;
+			line-height: 1.85;
+		}
+
+		header {
+			color: #fff;
+			background: linear-gradient(135deg, #123b46 0%, #07534e 55%, #0b756c 100%);
+			padding: 22px 20px;
+		}
+
+		.header-inner, main, footer > div {
+			width: min(920px, 100%);
+			margin: 0 auto;
+		}
+
+		header a {
+			color: #d8f4ed;
+			font-size: 14px;
+			text-decoration: none;
+		}
+
+		header a:hover { text-decoration: underline; }
+
+		main { padding: 54px 20px 70px; }
+
+		.article-header, article, .notice {
+			background: var(--paper);
+			border: 1px solid var(--line);
+			border-radius: 10px;
+		}
+
+		.article-header { padding: 38px 42px; }
+
+		.eyebrow {
+			margin: 0 0 12px;
+			color: var(--accent);
+			font-size: 13px;
+			font-weight: 700;
+			letter-spacing: .08em;
+		}
+
+		h1, h2, h3 { line-height: 1.4; }
+		h1 { margin: 0; font-size: clamp(28px, 5vw, 42px); }
+		h2 { margin: 0 0 22px; font-size: 27px; }
+		h3 { margin: 30px 0 10px; font-size: 20px; }
+		p { margin: 0 0 18px; }
+		.lead { margin: 20px 0 0; color: #50606b; font-size: 17px; }
+
+		article {
+			margin-top: 24px;
+			padding: 36px 42px;
+		}
+
+		section + section { margin-top: 46px; }
+
+		.specs {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 1px;
+			margin: 20px 0 10px;
+			overflow: hidden;
+			border: 1px solid var(--line);
+			background: var(--line);
+		}
+
+		.specs div { padding: 13px 16px; background: #fbfcfc; }
+		.specs dt { color: var(--muted); font-size: 13px; }
+		.specs dd { margin: 2px 0 0; font-weight: 700; }
+
+		.flow {
+			display: grid;
+			grid-template-columns: repeat(5, 1fr);
+			gap: 10px;
+			margin: 25px 0;
+		}
+
+		.flow div {
+			position: relative;
+			padding: 18px 10px;
+			color: var(--accent-dark);
+			background: var(--accent-soft);
+			border-radius: 7px;
+			font-size: 14px;
+			font-weight: 700;
+			text-align: center;
+		}
+
+		.flow div:not(:last-child)::after {
+			position: absolute;
+			top: 50%;
+			right: -9px;
+			color: var(--accent);
+			content: ">";
+			transform: translateY(-50%);
+		}
+
+		pre {
+			overflow-x: auto;
+			margin: 18px 0 24px;
+			padding: 20px;
+			color: #e8f1f0;
+			background: var(--code);
+			border-radius: 7px;
+			font: 14px/1.7 Consolas, "Courier New", monospace;
+		}
+
+		code {
+			padding: 2px 5px;
+			color: var(--accent-dark);
+			background: #edf4f2;
+			border-radius: 3px;
+			font-family: Consolas, "Courier New", monospace;
+			font-size: .92em;
+		}
+
+		pre code { padding: 0; color: inherit; background: none; }
+
+		.notice {
+			margin: 22px 0;
+			padding: 18px 20px;
+			border-left: 4px solid var(--accent);
+			border-radius: 0 7px 7px 0;
+		}
+
+		.notice strong { color: var(--accent-dark); }
+		.next-articles {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 12px;
+			margin-top: 24px;
+		}
+		.next-articles a {
+			display: block;
+			padding: 14px 16px;
+			color: var(--accent-dark);
+			background: var(--accent-soft);
+			border-radius: 7px;
+			font-weight: 700;
+			text-decoration: none;
+		}
+		.next-articles a:hover { text-decoration: underline; }
+
+		ul { padding-left: 1.4em; }
+		li + li { margin-top: 7px; }
+
+		a { color: var(--accent); }
+		footer {
+			padding: 30px 20px;
+			color: #c7d5d8;
+			background: #182b31;
+			font-size: 13px;
+		}
+
+		@media (max-width: 640px) {
+			main { padding: 28px 14px 48px; }
+			.article-header, article { padding: 26px 20px; }
+			.specs, .flow { grid-template-columns: 1fr; }
+			.next-articles { grid-template-columns: 1fr; }
+			.flow div:not(:last-child)::after {
+				top: auto;
+				right: 50%;
+				bottom: -14px;
+				content: "v";
+				transform: translateX(50%);
+			}
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<div class="header-inner">
+			<a href="../index.html">← AI・PC活用ブログに戻る</a>
+		</div>
+	</header>
+
+	<main>
+		<div class="article-header">
+			<p class="eyebrow">LOCAL AI / AI AGENT</p>
+			<h1>RTX 2060でローカルLLM＋AI Agent環境を構築</h1>
+			<p class="lead">
+				VRAM 6GBのRTX 2060で9Bクラスの量子化モデルを動かし、
+				VS CodeとClineからローカルLLMを使う環境を作りました。
+			</p>
+		</div>
+
+		<article>
+			<section>
+				<h2>今回作った環境</h2>
+				<p>
+					今回は、インターネット上のLLM APIを呼び出すのではなく、
+					自分のPC上で推論したモデルをOpenAI互換APIとして公開します。
+					ClineはそのAPIへ接続し、VS Code上でコードの読み取りや編集を行います。
+				</p>
+				<dl class="specs">
+					<div><dt>OS</dt><dd>Windows 11</dd></div>
+					<div><dt>CPU</dt><dd>Intel Core i7-8700</dd></div>
+					<div><dt>メモリ</dt><dd>16GB</dd></div>
+					<div><dt>GPU</dt><dd>NVIDIA GeForce RTX 2060 6GB</dd></div>
+					<div><dt>ランタイム</dt><dd>llama.cpp / llama-server</dd></div>
+					<div><dt>モデル</dt><dd>Qwythos-9B-v2-GGUF / Q4_K_M</dd></div>
+					<div><dt>クライアント</dt><dd>VS Code / Cline</dd></div>
+					<div><dt>API</dt><dd>127.0.0.1:8080</dd></div>
+				</dl>
+				<div class="notice">
+					<strong>この記事の位置づけ</strong><br>
+					この記事では、RTX 2060 6GBで実際に構成を作るときの設定と、手元の環境で確認する項目をまとめます。
+					モデルの導入手順は<a href="qwen-install.html">Qwen系モデルの導入記事</a>、ツール選びは<a href="ai-tool-comparison.html">実行環境の比較記事</a>に分けています。
+				</div>
+			</section>
+
+			<section>
+				<h2>全体の構成</h2>
+				<div class="flow" aria-label="ローカルLLM環境の接続順">
+					<div>Qwythos-9B-v2</div>
+					<div>llama-server</div>
+					<div>OpenAI互換API</div>
+					<div>Cline</div>
+					<div>VS Code</div>
+				</div>
+				<p>
+					APIサーバーは <code>127.0.0.1</code> にバインドしています。
+					そのため、同じPC上のアプリケーションから利用でき、外部ネットワークから直接アクセスされる構成にはなりません。
+					ソースコードやプロジェクトファイルを外部のLLM APIへ送らずに作業できる点が、この構成の大きなメリットです。
+				</p>
+			</section>
+
+			<section>
+				<h2>Qwythos-9B-v2について</h2>
+				<p>
+					Qwythos-9B-v2は、Qwen3.5系をベースにした9Bモデルです。
+					GGUF版が公開されているため、llama.cppで扱えます。今回選んだQ4_K_Mは、
+					モデルのサイズと品質、RTX 2060のVRAM容量のバランスを考えた量子化版です。
+				</p>
+				<p>
+					reasoningモデルとして、回答前にthinkingを行う形式になっています。
+					v2では繰り返しやループ挙動の改善を目的としたFTPOが行われています。
+					モデルカードにはApache-2.0ライセンスが記載されており、利用時は配布元のライセンスとモデルカードを確認してください。
+				</p>
+				<p>
+					推奨設定として、temperature 0.6、top-p 0.95、top-k 20などが案内されています。
+					実際の応答は、プロンプト、コンテキスト長、GPUオフロード、llama.cppのバージョンによって変わります。
+					詳細は<a href="https://huggingface.co/empero-ai/Qwythos-9B-v2-GGUF/tree/main?utm_source=chatgpt.com" target="_blank" rel="noopener">Hugging Faceのモデルカード</a>を参照してください。
+				</p>
+			</section>
+
+			<section>
+				<h2>llama-serverの起動設定</h2>
+				<p>
+					llama.cppに含まれる <code>llama-server</code> は、ブラウザやクライアントからHTTPで呼び出せる推論サーバーです。
+					OpenAI互換の <code>/v1/chat/completions</code> などのエンドポイントを提供するため、対応クライアントから接続できます。
+				</p>
+				<pre><code>llama-server \
+  -hf empero-ai/Qwythos-9B-v2-GGUF:Q4_K_M \
+  --host 127.0.0.1 \
+  --port 8080 \
+  -ngl 99 \
+  -c 16384 \
+  -n 8192 \
+  --jinja \
+  -fa on \
+  --verbose \
+  --alias qwythos-9B-v2</code></pre>
+				<p>Windowsの環境によっては、行末の <code>\</code> を使わず、1行で入力してください。</p>
+				<ul>
+					<li><code>-hf</code> はHugging Face上のモデルを指定します。</li>
+					<li><code>--host 127.0.0.1 --port 8080</code> はローカルPCの8080番ポートで待ち受けます。</li>
+					<li><code>-ngl 99</code> は、可能な範囲でモデルをGPUへオフロードします。</li>
+					<li><code>-c 16384</code> はコンテキストサイズ16,384、<code>-n 8192</code> は最大生成トークン数8,192です。</li>
+					<li><code>--jinja</code> はモデルのチャットテンプレートを利用し、<code>-fa on</code> はFlash Attentionを有効にします。</li>
+					<li><code>--verbose</code> でログを詳しく表示し、<code>--alias</code> でAPI上のモデル名を固定します。</li>
+				</ul>
+				<div class="notice">
+					<strong>設定値は固定の正解ではありません。</strong><br>
+					16,384トークンのコンテキストを確保すると、モデル本体以外にもKVキャッシュ用のメモリが必要になります。
+					VRAM不足や速度低下が起きる場合は、まずコンテキスト長を下げる、またはGPUオフロード量を調整してください。
+				</div>
+				<p>
+					llama.cppの詳細は<a href="https://github.com/ggml-org/llama.cpp?utm_source=chatgpt.com" target="_blank" rel="noopener">公式リポジトリ</a>で確認できます。
+					CUDA対応ビルド、NVIDIAドライバー、モデルのチャットテンプレートの相性によって挙動が変わるため、ログを確認しながら設定を詰めるのが安全です。
+				</p>
+			</section>
+
+			<section>
+				<h2>Clineから接続する</h2>
+				<p>
+					ClineのプロバイダーでOpenAI Compatibleを選び、llama-serverの接続先を指定します。
+					表示名や項目名はClineのバージョンで変わる場合がありますが、基本的には次の値を使います。
+				</p>
+				<pre><code>Provider: OpenAI Compatible
+Base URL: http://127.0.0.1:8080/v1
+Model ID: qwythos-9B-v2
+API Key: （ローカルサーバーが要求する場合のみ設定）</code></pre>
+				<p>
+					接続後は、ClineがVS Codeのワークスペースを読み取り、必要に応じてファイル編集やコマンド実行を提案します。
+					実行前に差分とコマンドを確認し、プロジェクトのバックアップやGit管理も併用すると安心です。
+					Clineの設定については<a href="https://github.com/cline/cline/blob/main/docs/provider-config/openai-compatible.mdx?utm_source=chatgpt.com" target="_blank" rel="noopener">OpenAI Compatibleの公式ドキュメント</a>を参照してください。
+				</p>
+			</section>
+
+			<section>
+				<h2>RTX 2060 6GBで使うときのポイント</h2>
+				<p>
+					RTX 2060でも、Q4_K_Mの9Bモデルをローカルで動かせます。ただし、モデルサイズだけでなく、コンテキスト長やKVキャッシュ、GPUに載せるレイヤー数もVRAM使用量に影響します。
+					「9Bなら必ず余裕」という意味ではありません。
+				</p>
+				<ul>
+					<li>大規模モデルほどVRAMに収まりにくく、CPUとの間でデータを移動する場面が増えます。</li>
+					<li>長いコンテキストや大きなファイルを渡すと、メモリ使用量と応答時間が増えます。</li>
+					<li>速度やVRAM使用量は、PC環境、ドライバー、llama.cppのビルド、モデル、設定で変化します。</li>
+				</ul>
+				<p>
+					実測するときは、サーバーのログとタスクマネージャー、またはNVIDIAの <code>nvidia-smi</code> を同時に確認します。
+					記録する項目は、モデル読み込み後のVRAM使用量、生成中の速度（tokens per second）、コンテキスト長、設定値です。
+					環境が違う読者でも再現しやすいように、測定時の条件を添えて記録するのがおすすめです。
+				</p>
+				<h3>実測メモ</h3>
+				<p>
+					数値はPCやllama.cppのビルドで変わるため、一般的な目安を実測値として扱わないようにします。
+					以下はこの構成で記録するための項目です。未計測の値は推測せず、測定後に更新します。
+				</p>
+				<dl class="specs">
+					<div><dt>モデルロード時間</dt><dd>未計測</dd></div>
+					<div><dt>モデルロード後のVRAM</dt><dd>未計測</dd></div>
+					<div><dt>生成中のRAM</dt><dd>未計測</dd></div>
+					<div><dt>生成速度</dt><dd>未計測 tokens/sec</dd></div>
+					<div><dt>コンテキスト長</dt><dd>16,384（設定値）</dd></div>
+					<div><dt>Clineでの体感</dt><dd>短いコード修正から確認</dd></div>
+				</dl>
+				<p>
+					測定時は、同じプロンプトと同じコンテキストで、ロード開始から応答可能になるまでの時間、<code>nvidia-smi</code> のVRAM、タスクマネージャーのメモリ、サーバーログの生成速度を記録します。
+					Clineでは、短い関数の修正、複数ファイルの変更、長いログの要約を分けて試すと、どこまで実用になるかを判断しやすくなります。
+				</p>
+				<div class="notice">
+					<strong>現時点での判断基準</strong><br>
+					16,384 contextは長いコードベースを一度に扱うための設定ですが、VRAMと速度の余裕を保証するものではありません。
+					まず短いコード修正でツール操作が安定するかを確認し、長い入力や複数ファイルの編集は実測後に範囲を広げます。
+				</div>
+			</section>
+
+			<section>
+				<h2>まとめ</h2>
+				<p>
+					llama.cppの <code>llama-server</code> を使えば、RTX 2060 6GBでも9Bクラスの量子化モデルをOpenAI互換APIとして公開できます。
+					ClineとVS Codeを組み合わせることで、有料APIを使わずにローカルAI Agentによるコーディング環境を構築できました。
+				</p>
+				<p>
+					月額API費用を抑えられ、ソースコードを外部サービスへ送らない構成にできる一方、GPUメモリの制約はあります。
+					まずは小さめのコンテキストと短いタスクから試し、ログとVRAM使用量を見ながら自分のPCに合う設定を探すのが現実的です。
+				</p>
+				<nav class="next-articles" aria-label="関連記事">
+					<a href="qwen-install.html">次の記事: Qwen系モデルの導入手順 →</a>
+					<a href="ai-tool-comparison.html">ツール選び: Ollama / LM Studio / llama.cppを比較</a>
+				</nav>
+			</section>
+		</article>
+	</main>
+
+	<footer>
+		<div>&copy; 2026 AI・PC活用ブログ</div>
+	</footer>
+</body>
+</html>
