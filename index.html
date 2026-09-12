@@ -122,7 +122,7 @@
         <h2>このブログについて</h2>
         <p>
             AIやローカルLLM、PC、便利なITツールなどを実際に試しながら、
-            構築方法や使用感、便利な使い方を紹介しています。
+            構築方法や実測値、使用感、便利な使い方を紹介しています。
         </p>
     </section>
 
@@ -139,21 +139,34 @@
                     </a>
                 </h3>
                 <p>
-                    VRAM 6GBのRTX 2060でローカルLLMを実際に動かしてみました。
-                    必要な設定や使用感を紹介します。
+                    VRAM 6GBのRTX 2060でQwythos-9B-v2を動かし、
+                    ロード時間、メモリ、速度、Clineでの実用範囲を記録します。
+                </p>
+            </article>
+
+            <article class="article">
+                <span class="category">ローカルLLM</span>
+                <h3>
+                    <a href="articles/qwen-install.html">
+                        Qwen系ローカルLLMをllama.cppで動かす
+                    </a>
+                </h3>
+                <p>
+                    Qwen系モデルをGGUF量子化し、llama.cppとllama-serverで
+                    OpenAI互換APIとして使う方法を解説します。
                 </p>
             </article>
 
             <article class="article">
                 <span class="category">AIツール</span>
                 <h3>
-                    <a href="articles/ai-coding.html">
-                        ローカルLLMでAIコーディング環境を作る
+                    <a href="articles/ai-tool-comparison.html">
+                        Ollama / LM Studio / llama.cppを比較する
                     </a>
                 </h3>
                 <p>
-                    VS CodeとローカルLLMを組み合わせて、
-                    AIによるコーディング環境を構築してみました。
+                    3つの導入方法を、AI AgentやClineとの接続、
+                    設定の細かさ、始めやすさから比較します。
                 </p>
             </article>
 
