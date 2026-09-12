@@ -149,6 +149,24 @@
 		}
 
 		.notice strong { color: var(--accent-dark); }
+		.affiliate-box {
+			margin: 26px 0;
+			padding: 20px;
+			background: #fff8e8;
+			border: 1px solid #ead6a4;
+			border-radius: 8px;
+		}
+		.affiliate-box p { margin-bottom: 10px; font-size: 14px; }
+		.affiliate-box a {
+			display: inline-block;
+			padding: 11px 16px;
+			color: #fff;
+			background: var(--accent-dark);
+			border-radius: 6px;
+			font-weight: 700;
+			text-decoration: none;
+		}
+		.affiliate-box a:hover { background: var(--accent); }
 		.next-articles {
 			display: grid;
 			grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -339,6 +357,11 @@ API Key: （ローカルサーバーが要求する場合のみ設定）</code><
 					記録する項目は、モデル読み込み後のVRAM使用量、生成中の速度（tokens per second）、コンテキスト長、設定値です。
 					環境が違う読者でも再現しやすいように、測定時の条件を添えて記録するのがおすすめです。
 				</p>
+				<div class="affiliate-box">
+					<p><strong>広告</strong>：この記事にはアフィリエイト広告を含みます。GPU搭載PCを検討するときは、用途に必要なGPU、VRAM、メモリ容量を確認してください。</p>
+					<a href="https://px.a8.net/svt/ejp?a8mat=4BCA77+BT3IPE+5U1O+BW8O2&amp;a8ejpredirect=https%3A%2F%2Fwww.ozgaming-pcshop.com%2F" target="_blank" rel="nofollow sponsored noopener">OZ GAMINGでGPU搭載PCを探す</a>
+					<img border="0" width="1" height="1" src="https://www13.a8.net/0.gif?a8mat=4BCA77+BT3IPE+5U1O+BW8O2" alt="">
+				</div>
 				<h3>実測メモ</h3>
 				<p>
 					数値はPCやllama.cppのビルドで変わるため、一般的な目安を実測値として扱わないようにします。
