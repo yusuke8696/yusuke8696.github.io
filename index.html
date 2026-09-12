@@ -3,181 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>AI・PC活用ブログ</title>
-    <meta name="description" content="AI、ローカルLLM、PC、便利なITツールなどを実際に試して紹介するブログです。">
-
+    <meta name="description" content="AI、ローカルLLM、PC活用を、仕組みと設定を中心にわかりやすく紹介するブログです。">
+    <title>AI・PC活用ブログ | ローカルLLMとPC活用のメモ</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family:
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                "Noto Sans JP",
-                sans-serif;
-            color: #333;
-            background: #f7f7f7;
-            line-height: 1.8;
-        }
-
-        header {
-            background: #222;
-            color: white;
-            padding: 30px 20px;
-        }
-
-        header .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        header h1 {
-            margin: 0;
-            font-size: 28px;
-        }
-
-        header p {
-            margin: 5px 0 0;
-            color: #ccc;
-        }
-
-        main {
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        .intro {
-            background: white;
-            padding: 30px;
-            margin-bottom: 30px;
-            border-radius: 8px;
-        }
-
-        .intro h2 {
-            margin-top: 0;
-        }
-
-        .articles {
-            display: grid;
-            gap: 20px;
-        }
-
-        .article {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-        }
-
-        .article h3 {
-            margin-top: 0;
-        }
-
-        .article a {
-            color: #0066cc;
-            text-decoration: none;
-        }
-
-        .article a:hover {
-            text-decoration: underline;
-        }
-
-        .category {
-            display: inline-block;
-            background: #eee;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 13px;
-            color: #555;
-        }
-
-        footer {
-            margin-top: 60px;
-            padding: 30px 20px;
-            text-align: center;
-            background: #222;
-            color: #aaa;
-            font-size: 14px;
+        :root { --ink:#1d2933; --muted:#61717d; --line:#dce5e8; --paper:#fff; --canvas:#f4f7f7; --accent:#08766d; --accent-dark:#075850; --accent-soft:#e2f2ee; --navy:#142f3a; --shadow:0 12px 30px rgba(20,47,58,.08); }
+        * { box-sizing:border-box; }
+        html { scroll-behavior:smooth; }
+        body { margin:0; color:var(--ink); background:var(--canvas); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif; line-height:1.8; }
+        a { color:inherit; }
+        .container { width:min(1100px,calc(100% - 40px)); margin:0 auto; }
+        .site-header { color:#fff; background:var(--navy); }
+        .header-inner { display:flex; align-items:center; justify-content:space-between; gap:24px; min-height:72px; }
+        .brand { color:#fff; font-size:19px; font-weight:800; letter-spacing:.03em; text-decoration:none; }
+        .site-nav { display:flex; gap:20px; font-size:14px; }
+        .site-nav a { color:#d8e8e7; text-decoration:none; }
+        .site-nav a:hover { color:#fff; }
+        .hero { padding:84px 0 74px; color:#fff; background:linear-gradient(125deg,#142f3a 0%,#075850 58%,#08766d 100%); }
+        .hero-grid { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(260px,.6fr); gap:48px; align-items:end; }
+        .eyebrow { margin:0 0 14px; color:#9de0d3; font-size:13px; font-weight:700; letter-spacing:.12em; }
+        h1,h2,h3 { line-height:1.4; }
+        h1 { margin:0; font-size:clamp(34px,5vw,52px); letter-spacing:.02em; }
+        .hero p:not(.eyebrow) { max-width:650px; margin:18px 0 0; color:#d9efeb; font-size:17px; }
+        .hero-note { padding:22px; color:#ddf2ef; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22); border-radius:12px; font-size:14px; }
+        .hero-note strong { display:block; margin-bottom:5px; color:#fff; font-size:16px; }
+        main { padding:58px 0 80px; }
+        .section { margin-top:64px; }
+        .section:first-child { margin-top:0; }
+        .section-heading { display:flex; align-items:end; justify-content:space-between; gap:20px; margin-bottom:22px; }
+        .section-heading h2 { margin:0; font-size:28px; }
+        .section-heading p { margin:0; color:var(--muted); font-size:14px; }
+        .intro-grid { display:grid; grid-template-columns:1.05fr .95fr; gap:22px; }
+        .panel,.article-card,.category-card { background:var(--paper); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); }
+        .panel { padding:30px; }
+        .panel h2 { margin:0 0 14px; font-size:25px; }
+        .panel p { margin:0; }
+        .panel p + p { margin-top:14px; }
+        .check-list { margin:0; padding:0; list-style:none; }
+        .check-list li { position:relative; padding:10px 0 10px 28px; border-bottom:1px solid var(--line); }
+        .check-list li:last-child { border-bottom:0; }
+        .check-list li::before { position:absolute; left:0; color:var(--accent); content:"✓"; font-weight:800; }
+        .article-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; }
+        .article-card { display:flex; flex-direction:column; min-height:100%; padding:26px; }
+        .badge { display:inline-block; width:fit-content; margin-bottom:14px; padding:3px 10px; color:var(--accent-dark); background:var(--accent-soft); border-radius:999px; font-size:12px; font-weight:700; }
+        .article-card h3 { margin:0; font-size:21px; }
+        .article-card h3 a { color:var(--ink); text-decoration:none; }
+        .article-card h3 a:hover { color:var(--accent); text-decoration:underline; }
+        .article-card p { margin:14px 0 22px; color:var(--muted); font-size:14px; }
+        .read-more { margin-top:auto; color:var(--accent-dark); font-size:14px; font-weight:700; text-decoration:none; }
+        .read-more:hover { text-decoration:underline; }
+        .category-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+        .category-card { padding:22px; }
+        .category-card h3 { margin:0 0 7px; color:var(--accent-dark); font-size:18px; }
+        .category-card p { margin:0; color:var(--muted); font-size:14px; }
+        .policy { padding:28px 30px; color:#dff2ef; background:var(--navy); border-radius:12px; }
+        .policy h2 { margin:0 0 10px; color:#fff; font-size:23px; }
+        .policy p { margin:0; font-size:14px; }
+        .site-footer { padding:36px 0; color:#b9c9cc; background:#10242c; font-size:13px; }
+        .footer-inner { display:flex; justify-content:space-between; gap:20px; }
+        .site-footer p { margin:0; }
+        @media (max-width:760px) {
+            .container { width:min(100% - 28px,1100px); }
+            .header-inner { min-height:auto; padding:17px 0; align-items:flex-start; flex-direction:column; gap:7px; }
+            .site-nav { gap:15px; font-size:13px; }
+            .hero { padding:57px 0 52px; }
+            .hero-grid,.intro-grid,.article-grid,.category-grid { grid-template-columns:1fr; }
+            .hero-grid { gap:26px; }
+            .section { margin-top:48px; }
+            .section-heading { display:block; }
+            .section-heading p { margin-top:5px; }
+            .panel,.article-card { padding:23px 20px; }
+            .footer-inner { flex-direction:column; }
         }
     </style>
 </head>
-
 <body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="index.html">AI・PC活用ブログ</a>
+            <nav class="site-nav" aria-label="メインナビゲーション">
+                <a href="#about">このブログについて</a>
+                <a href="#articles">記事一覧</a>
+                <a href="#categories">カテゴリ</a>
+            </nav>
+        </div>
+    </header>
 
-<header>
-    <div class="container">
-        <h1>AI・PC活用ブログ</h1>
-        <p>AI・ローカルLLM・PC・便利なITツールを実際に試して紹介</p>
-    </div>
-</header>
-
-<main>
-
-    <section class="intro">
-        <h2>このブログについて</h2>
-        <p>
-            AIやローカルLLM、PC、便利なITツールなどを実際に試しながら、
-            構築方法や実測値、使用感、便利な使い方を紹介しています。
-        </p>
-    </section>
-
-    <section>
-        <h2>新着記事</h2>
-
-        <div class="articles">
-
-            <article class="article">
-                <span class="category">ローカルLLM</span>
-                <h3>
-                    <a href="articles/local-llm-pc.html">
-                        RTX 2060でローカルLLMを動かしてみた
-                    </a>
-                </h3>
-                <p>
-                    VRAM 6GBのRTX 2060でQwythos-9B-v2を動かし、
-                    ロード時間、メモリ、速度、Clineでの実用範囲を記録します。
-                </p>
-            </article>
-
-            <article class="article">
-                <span class="category">ローカルLLM</span>
-                <h3>
-                    <a href="articles/qwen-install.html">
-                        Qwen系ローカルLLMをllama.cppで動かす
-                    </a>
-                </h3>
-                <p>
-                    Qwen系モデルをGGUF量子化し、llama.cppとllama-serverで
-                    OpenAI互換APIとして使う方法を解説します。
-                </p>
-            </article>
-
-            <article class="article">
-                <span class="category">AIツール</span>
-                <h3>
-                    <a href="articles/ai-tool-comparison.html">
-                        Ollama / LM Studio / llama.cppを比較する
-                    </a>
-                </h3>
-                <p>
-                    3つの導入方法を、AI AgentやClineとの接続、
-                    設定の細かさ、始めやすさから比較します。
-                </p>
-            </article>
-
+    <section class="hero">
+        <div class="container hero-grid">
+            <div>
+                <p class="eyebrow">AI / LOCAL LLM / PC</p>
+                <h1>AIとPCを、<br>自分の手で使いこなす。</h1>
+                <p>ローカルLLMの導入、PC環境の考え方、AIツールの選び方を、設定と確認ポイントを中心に整理するブログです。</p>
+            </div>
+            <aside class="hero-note">
+                <strong>まず読むなら</strong>
+                ローカルLLMを始めるための、PC構成・モデル導入・ツール比較の3記事を用意しています。
+            </aside>
         </div>
     </section>
 
-</main>
+    <main>
+        <section id="about" class="section intro-grid" aria-label="ブログ紹介">
+            <div class="panel">
+                <h2>このブログについて</h2>
+                <p>AIツールやローカルLLMは、仕組みを理解して小さく試すと、自分の環境に合う使い方を見つけやすくなります。</p>
+                <p>このブログでは、導入時に迷いやすい設定、PCの制約、確認手順をできるだけ具体的にまとめます。</p>
+            </div>
+            <div class="panel">
+                <h2>記事で大切にすること</h2>
+                <ul class="check-list">
+                    <li>設定値や仕様は公式情報を確認する</li>
+                    <li>環境で変わる結果は断定しない</li>
+                    <li>公開前にリンクと安全性を見直す</li>
+                </ul>
+            </div>
+        </section>
 
-<footer>
-    <p>&copy; 2026 AI・PC活用ブログ</p>
-</footer>
+        <section id="articles" class="section" aria-labelledby="articles-heading">
+            <div class="section-heading">
+                <div>
+                    <h2 id="articles-heading">まず読みたい記事</h2>
+                    <p>ローカルLLMを試すための基本を、順番に読めるようにしています。</p>
+                </div>
+            </div>
+            <div class="article-grid">
+                <article class="article-card">
+                    <span class="badge">ローカルLLM</span>
+                    <h3><a href="articles/local-llm-pc.html">RTX 2060でローカルLLM＋AI Agent環境を構築</a></h3>
+                    <p>GPUメモリ、コンテキスト長、llama-serverの設定など、ローカル環境を作る際の確認ポイントを整理します。</p>
+                    <a class="read-more" href="articles/local-llm-pc.html">記事を読む →</a>
+                </article>
+                <article class="article-card">
+                    <span class="badge">ローカルLLM</span>
+                    <h3><a href="articles/qwen-install.html">Qwen系ローカルLLMをllama.cppで動かす</a></h3>
+                    <p>GGUF量子化モデルの選び方から、llama-serverでの起動とローカルAPI利用までを解説します。</p>
+                    <a class="read-more" href="articles/qwen-install.html">記事を読む →</a>
+                </article>
+                <article class="article-card">
+                    <span class="badge">AIツール</span>
+                    <h3><a href="articles/ai-tool-comparison.html">Ollama / LM Studio / llama.cppを比較する</a></h3>
+                    <p>始めやすさ、設定の自由度、AI Agentとの接続という観点から、実行環境を比較します。</p>
+                    <a class="read-more" href="articles/ai-tool-comparison.html">記事を読む →</a>
+                </article>
+            </div>
+        </section>
 
+        <section id="categories" class="section" aria-labelledby="categories-heading">
+            <div class="section-heading">
+                <div>
+                    <h2 id="categories-heading">カテゴリ</h2>
+                    <p>目的に近いテーマから記事を探せます。</p>
+                </div>
+            </div>
+            <div class="category-grid">
+                <div class="category-card"><h3>ローカルLLM</h3><p>PC上でAIモデルを動かすための構成、モデル、ランタイムの情報。</p></div>
+                <div class="category-card"><h3>AIツール</h3><p>目的に合わせたツール選びと、導入時の確認ポイント。</p></div>
+                <div class="category-card"><h3>PC活用</h3><p>AIを使うためのPC環境、設定、日々の作業を整えるヒント。</p></div>
+            </div>
+        </section>
+
+        <section class="section policy" aria-labelledby="policy-heading">
+            <h2 id="policy-heading">広告・リンクについて</h2>
+            <p>記事にはアフィリエイト広告を含む場合があります。リンク先の商品・サービスを利用する前に、価格、仕様、利用条件などを必ず公式サイトで確認してください。</p>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>&copy; 2026 AI・PC活用ブログ</p>
+            <p>AI・ローカルLLM・PC活用のメモ</p>
+        </div>
+    </footer>
 </body>
 </html>
