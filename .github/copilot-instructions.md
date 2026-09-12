@@ -1,0 +1,24 @@
+# Public GitHub Pages blog instructions
+
+This repository is a public GitHub Pages affiliate blog. Treat every file and its Git history as publicly visible.
+
+## Safety and privacy
+
+- Never create, request, repeat, or commit secrets: API keys, access tokens, passwords, private keys, `.env` values, GitHub Actions secrets, login URLs containing credentials, or service-account files.
+- Never include the blog owner's personal information unless it is already deliberately published in the repository: real name, home address, private email address, telephone number, birth date, or account identifiers.
+- Do not add analytics, advertising, affiliate-network, or third-party service credentials. If a feature requires a secret, explain what environment variable or GitHub Actions Secret the owner must configure; do not supply a value or put a placeholder that resembles a real credential.
+- An affiliate link that the owner has explicitly provided may be included in published article content. Do not invent affiliate links, tracking IDs, or login details.
+- Before proposing a commit, check that no secret or personal data has been added. If any is found, stop and tell the owner what must be removed or rotated.
+
+## Article writing
+
+- Write blog articles in natural Japanese unless the owner asks for another language.
+- Keep claims accurate and distinguish fact, opinion, and personal experience. Do not fabricate product use, results, reviews, prices, statistics, sources, or testimonials.
+- Include a clear affiliate disclosure when an article contains affiliate links, for example: 「当サイトはアフィリエイト広告を利用しています。」
+- Do not make misleading earnings guarantees, medical/legal/financial promises, or unsupported comparisons.
+- Produce only static-site files suitable for GitHub Pages. Do not add server-side code or require hidden runtime configuration for an article to work.
+
+## Public-repository hygiene
+
+- Use generic placeholders such as `YOUR_ANALYTICS_ID` only in documentation when necessary, and state that they must not be committed with real values.
+- Prefer links to official sources for factual claims that may change, and identify when information needs the owner's review before publication.
