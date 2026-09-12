@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>llama-serverのコンテキスト長とは？ -c・-nを初心者向けに解説 | AI・PC活用ブログ</title>
+<meta name="description" content="llama-serverの-c（コンテキストサイズ）と-n（生成トークン数）の違い、Context Window Exceededが起きる理由を初心者向けに整理します。">
+<style>
+:root{--ink:#202a35;--muted:#657382;--line:#dbe3e8;--paper:#fff;--canvas:#f3f6f5;--accent:#0b756c;--accent-dark:#07534e;--accent-soft:#e4f3ef;--code:#18232b}*{box-sizing:border-box}body{margin:0;color:var(--ink);background:var(--canvas);font-family:"Noto Sans JP","Yu Gothic",sans-serif;line-height:1.85}header{padding:22px 20px;color:#fff;background:linear-gradient(135deg,#123b46 0%,#07534e 55%,#0b756c 100%)}.header-inner,main,footer>div{width:min(920px,100%);margin:0 auto}header a{color:#d8f4ed;font-size:14px;text-decoration:none}main{padding:54px 20px 70px}.article-header,article,.notice{background:var(--paper);border:1px solid var(--line);border-radius:10px}.article-header{padding:38px 42px}.eyebrow{margin:0 0 12px;color:var(--accent);font-size:13px;font-weight:700;letter-spacing:.08em}h1,h2{line-height:1.4}h1{margin:0;font-size:clamp(28px,5vw,42px)}h2{margin:0 0 22px;font-size:27px}p{margin:0 0 18px}.lead{margin:20px 0 0;color:#50606b;font-size:17px}article{margin-top:24px;padding:36px 42px}section+section{margin-top:46px}pre{overflow-x:auto;margin:18px 0 24px;padding:20px;color:#e8f1f0;background:var(--code);border-radius:7px;font:14px/1.7 Consolas,"Courier New",monospace}code{padding:2px 5px;color:var(--accent-dark);background:#edf4f2;border-radius:3px;font-family:Consolas,"Courier New",monospace;font-size:.92em}pre code{padding:0;color:inherit;background:none}.notice{margin:22px 0;padding:18px 20px;border-left:4px solid var(--accent);border-radius:0 7px 7px 0}.notice strong{color:var(--accent-dark)}table{width:100%;border-collapse:collapse;margin:20px 0}th,td{padding:12px 14px;border:1px solid var(--line);text-align:left}th{background:var(--accent-soft);color:var(--accent-dark)}a{color:var(--accent)}footer{padding:30px 20px;color:#c7d5d8;background:#182b31;font-size:13px}@media(max-width:640px){main{padding:28px 14px 48px}.article-header,article{padding:26px 20px}table{font-size:14px}}
+</style></head>
+<body><header><div class="header-inner"><a href="../index.html">← AI・PC活用ブログに戻る</a></div></header>
+<main><div class="article-header"><p class="eyebrow">LOCAL AI / LLAMA.CPP</p><h1>llama-serverのコンテキスト長とは？<br><code>-c</code>・<code>-n</code>を初心者向けに解説</h1><p class="lead">モデルは長いコンテキストに対応しているのに、なぜContext Window Exceededになるのか。llama-server側の設定との違いから整理します。</p></div>
+<article>
+<section><h2>コンテキスト長とは？</h2><p>LLMが1回の処理で参照できる情報量には上限があります。大まかには、システムプロンプト、ユーザー入力、会話履歴、ツールから渡された情報、生成に使う領域などが関係します。</p><p>そのため、ユーザーの質問が短くても、AIエージェントやコーディングツールから大量の情報が追加されれば、リクエスト全体は大きくなることがあります。</p></section>
+<section><h2><code>-c</code>はコンテキストサイズ</h2><p>llama-serverの<code>-c</code>（<code>--ctx-size</code>）は、実行時に利用するコンテキストサイズを指定する設定です。</p><pre><code>llama-server -m model.gguf -c 16384</code></pre><div class="notice"><strong>重要：</strong>モデルが対応する最大コンテキスト長と、llama-serverで実際に使用するコンテキストサイズは同じとは限りません。</div></section>
+<section><h2><code>-n</code>との違い</h2><table><thead><tr><th>設定</th><th>主な役割</th></tr></thead><tbody><tr><td><code>-c</code></td><td>コンテキストとして扱う領域</td></tr><tr><td><code>-n</code></td><td>生成するトークン数の上限に関係する設定</td></tr></tbody></table><pre><code>llama-server -m model.gguf -c 16384 -n 2048</code></pre><p>長い入力を扱いたい場合に、単純に<code>-n</code>を増やせばよいわけではありません。入力や会話履歴を含む情報量を考える場合は、まずコンテキスト側を確認します。</p></section>
+<section><h2>Context Window Exceededが起きる理由</h2><p>代表的な原因は、送信しようとしている情報量が実際に利用できるコンテキストサイズを超えることです。</p><pre><code>モデルが対応するコンテキスト
+        ↓
+llama-serverの設定
+        ↓
+APIクライアント側の設定
+        ↓
+実際に送信されるプロンプト</code></pre><p>モデルの公称スペックだけでなく、この複数の層を確認する必要があります。</p></section>
+<section><h2>AIコーディングツールでは入力が増えやすい</h2><p>AIコーディングツールでは、質問以外にシステムプロンプト、プロジェクト情報、ファイル内容、会話履歴、ツール定義、ツール実行結果などが追加されることがあります。そのため、画面上では短い質問でもLLMへ送る情報量は大きくなる可能性があります。</p></section>
+<section><h2><code>-c</code>は大きいほど良い？</h2><p>必ずしもそうではありません。大きなコンテキストを利用する場合は実行環境側のリソースも考慮する必要があります。モデルの最大値を常に設定するのではなく、短いチャット中心か、大量のコードや文書を扱う用途かなどに合わせて決めます。</p></section>
+<section><h2>まとめ</h2><p><code>-c</code>はllama-serverで使用するコンテキスト、<code>-n</code>は生成するトークン数に関係する設定です。Context Window Exceededが発生したら、モデルの仕様だけでなく、llama-server、クライアント、実際のリクエスト量を順に確認すると原因を切り分けやすくなります。</p><p>llama-server自体の導入方法は、<a href="qwen-install.html">Qwen系ローカルLLMをllama.cppで動かす</a>も参考にしてください。</p></section>
+</article></main><footer><div>AI・PC活用ブログ</div></footer></body></html>
