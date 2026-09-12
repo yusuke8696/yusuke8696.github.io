@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Qwen系ローカルLLMをllama.cppで動かす | AI・PC活用ブログ</title>
+	<meta name="description" content="Qwen系モデルやQwythos-9B-v2-GGUFをllama.cppとllama-serverで動かす方法を、Windows環境向けに解説します。">
+	<style>
+		:root {
+			--ink: #202a35;
+			--muted: #657382;
+			--line: #dbe3e8;
+			--paper: #ffffff;
+			--canvas: #f3f6f5;
+			--accent: #0b756c;
+			--accent-dark: #07534e;
+			--accent-soft: #e4f3ef;
+			--code: #18232b;
+		}
+
+		* { box-sizing: border-box; }
+
+		body {
+			margin: 0;
+			color: var(--ink);
+			background: var(--canvas);
+			font-family: "Noto Sans JP", "Yu Gothic", sans-serif;
+			line-height: 1.85;
+		}
+
+		header {
+			padding: 22px 20px;
+			color: #fff;
+			background: linear-gradient(135deg, #123b46 0%, #07534e 55%, #0b756c 100%);
+		}
+
+		.header-inner, main, footer > div {
+			width: min(920px, 100%);
+			margin: 0 auto;
+		}
+
+		header a {
+			color: #d8f4ed;
+			font-size: 14px;
+			text-decoration: none;
+		}
+
+		header a:hover { text-decoration: underline; }
+
+		main { padding: 54px 20px 70px; }
+
+		.article-header, article, .notice {
+			background: var(--paper);
+			border: 1px solid var(--line);
+			border-radius: 10px;
+		}
+
+		.article-header { padding: 38px 42px; }
+
+		.eyebrow {
+			margin: 0 0 12px;
+			color: var(--accent);
+			font-size: 13px;
+			font-weight: 700;
+			letter-spacing: .08em;
+		}
+
+		h1, h2, h3 { line-height: 1.4; }
+		h1 { margin: 0; font-size: clamp(28px, 5vw, 42px); }
+		h2 { margin: 0 0 22px; font-size: 27px; }
+		h3 { margin: 30px 0 10px; font-size: 20px; }
+		p { margin: 0 0 18px; }
+		.lead { margin: 20px 0 0; color: #50606b; font-size: 17px; }
+
+		article {
+			margin-top: 24px;
+			padding: 36px 42px;
+		}
+
+		section + section { margin-top: 46px; }
+
+		.flow {
+			display: grid;
+			grid-template-columns: repeat(5, 1fr);
+			gap: 10px;
+			margin: 25px 0;
+		}
+
+		.flow div {
+			position: relative;
+			padding: 18px 10px;
+			color: var(--accent-dark);
+			background: var(--accent-soft);
+			border-radius: 7px;
+			font-size: 14px;
+			font-weight: 700;
+			text-align: center;
+		}
+
+		.flow div:not(:last-child)::after {
+			position: absolute;
+			top: 50%;
+			right: -9px;
+			color: var(--accent);
+			content: ">";
+			transform: translateY(-50%);
+		}
+
+		.checklist {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 1px;
+			margin: 20px 0;
+			border: 1px solid var(--line);
+			background: var(--line);
+		}
+
+		.checklist div { padding: 13px 16px; background: #fbfcfc; }
+		.checklist strong { display: block; color: var(--accent-dark); }
+
+		pre {
+			overflow-x: auto;
+			margin: 18px 0 24px;
+			padding: 20px;
+			color: #e8f1f0;
+			background: var(--code);
+			border-radius: 7px;
+			font: 14px/1.7 Consolas, "Courier New", monospace;
+		}
+
+		code {
+			padding: 2px 5px;
+			color: var(--accent-dark);
+			background: #edf4f2;
+			border-radius: 3px;
+			font-family: Consolas, "Courier New", monospace;
+			font-size: .92em;
+		}
+
+		pre code { padding: 0; color: inherit; background: none; }
+
+		.notice {
+			margin: 22px 0;
+			padding: 18px 20px;
+			border-left: 4px solid var(--accent);
+			border-radius: 0 7px 7px 0;
+		}
+
+		.notice strong { color: var(--accent-dark); }
+		.next-articles {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 12px;
+			margin-top: 24px;
+		}
+		.next-articles a {
+			display: block;
+			padding: 14px 16px;
+			color: var(--accent-dark);
+			background: var(--accent-soft);
+			border-radius: 7px;
+			font-weight: 700;
+			text-decoration: none;
+		}
+		.next-articles a:hover { text-decoration: underline; }
+		ul { padding-left: 1.4em; }
+		li + li { margin-top: 7px; }
+		a { color: var(--accent); }
+
+		footer {
+			padding: 30px 20px;
+			color: #c7d5d8;
+			background: #182b31;
+			font-size: 13px;
+		}
+
+		@media (max-width: 640px) {
+			main { padding: 28px 14px 48px; }
+			.article-header, article { padding: 26px 20px; }
+			.checklist, .flow { grid-template-columns: 1fr; }
+			.next-articles { grid-template-columns: 1fr; }
+			.flow div:not(:last-child)::after {
+				top: auto;
+				right: 50%;
+				bottom: -14px;
+				content: "v";
+				transform: translateX(50%);
+			}
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<div class="header-inner">
+			<a href="../index.html">← AI・PC活用ブログに戻る</a>
+		</div>
+	</header>
+
+	<main>
+		<div class="article-header">
+			<p class="eyebrow">LOCAL AI / QWEN</p>
+			<h1>Qwen系ローカルLLMをllama.cppで動かす</h1>
+			<p class="lead">
+				Qwen系モデルをGGUF量子化版で入手し、llama.cppのllama-serverから
+				OpenAI互換APIとして利用する方法をWindows環境向けに紹介します。
+			</p>
+		</div>
+
+		<article>
+			<section>
+				<h2>基本構成</h2>
+				<p>
+					Qwen系モデルをローカルで動かすときは、モデル本体をそのまま実行するのではなく、
+					GGUF形式の量子化モデルと、それを読み込めるランタイムを組み合わせます。
+					llama.cppにはHTTPサーバー機能もあるため、対応クライアントから接続できます。
+				</p>
+				<div class="flow" aria-label="Qwen系ローカルLLMの構成">
+					<div>Qwen系モデル</div>
+					<div>GGUF量子化</div>
+					<div>llama.cpp</div>
+					<div>llama-server</div>
+					<div>OpenAI互換API</div>
+				</div>
+				<p>
+					llama.cppはHugging Face上の対応モデルを、<code>-hf &lt;user&gt;/&lt;model&gt;[:quant]</code>
+					の形式で直接取得して実行できます。対応状況や最新の書式は、
+					<a href="https://github.com/ggml-org/llama.cpp" target="_blank" rel="noopener">llama.cpp公式リポジトリ</a>で確認してください。
+				</p>
+				<div class="notice">
+					<strong>3記事の2本目として読む</strong><br>
+					前の記事ではRTX 2060で動かす構成と実測項目を整理しました。ここではモデルの取得、量子化、起動までに集中し、最後に<a href="ai-tool-comparison.html">Ollama / LM Studio / llama.cppの比較</a>へ進みます。
+				</div>
+			</section>
+
+			<section>
+				<h2>Q4_K_Mとは</h2>
+				<p>
+					Q4_K_Mは、GGUFで利用される量子化方式の一つです。FP16などの高精度な形式と比べて
+					モデルサイズとメモリ使用量を抑えられる一方、量子化による品質低下とのトレードオフがあります。
+				</p>
+				<div class="notice">
+					<strong>量子化版はGPUに合わせて選びます。</strong><br>
+					モデルのファイルサイズだけでなく、推論時のKVキャッシュやコンテキスト長でもVRAM使用量は変わります。
+					Q4_K_Mでも、GPUのVRAM容量に対して必ず余裕があるとは限りません。
+				</div>
+			</section>
+
+			<section>
+				<h2>Qwen系モデルの選び方</h2>
+				<p>
+					モデル名やパラメータ数だけで決めず、自分の用途とPCの制約を照らし合わせます。
+					同じQwen系でも、コーディング、会話、推論、画像入力などで向いているモデルは異なります。
+				</p>
+				<div class="checklist">
+					<div><strong>モデルサイズ・パラメータ数</strong>メモリ容量と回答品質、速度のバランスを確認します。</div>
+					<div><strong>量子化方式</strong>Q4_K_Mなど、VRAMに収まる形式を選びます。</div>
+					<div><strong>コンテキスト長</strong>長文や大きなソースコードを扱う場合に確認します。</div>
+					<div><strong>推論速度</strong>実際のGPU、CPU、ビルドによる差を考慮します。</div>
+					<div><strong>Thinking対応</strong>回答前の推論過程を使うモデルか確認します。</div>
+					<div><strong>Tool / Function Calling</strong>AI Agentや外部ツール連携の要件を確認します。</div>
+					<div><strong>Vision対応</strong>画像入力が必要な場合は対応モデルを選びます。</div>
+					<div><strong>ライセンス</strong>利用目的と再配布条件をモデルカードで確認します。</div>
+				</div>
+			</section>
+
+			<section>
+				<h2>Qwythos-9B-v2を使う</h2>
+				<p>
+					今回の環境では、Qwen3.5系をベースとした <code>Qwythos-9B-v2-GGUF</code> を利用します。
+					9BクラスのモデルをQ4_K_Mに量子化した構成で、ローカルGPUのVRAMと品質のバランスを取りやすい選択肢です。
+				</p>
+				<p>
+					モデルカードでは、標準的なQwen3.5 chat templateを使用すると説明されています。
+					現代的なGGUFランタイムではテンプレートを自動的に読み込める場合がありますが、
+					期待どおりに会話できないときはモデルカードとサーバーログを確認してください。
+					詳しくは<a href="https://huggingface.co/empero-ai/Qwythos-9B-v2-GGUF/blame/main/README.md?utm_source=chatgpt.com" target="_blank" rel="noopener">Qwythos-9B-v2のモデルカード</a>を参照してください。
+				</p>
+			</section>
+
+			<section>
+				<h2>llama-serverで起動する</h2>
+				<p>
+					llama.cppをインストールした環境では、Hugging Faceのモデル名を指定してサーバーを起動できます。
+					Qwythos-9B-v2-GGUFのQ4_K_Mを使う場合の例は次のとおりです。
+				</p>
+				<pre><code>llama-server -hf empero-ai/Qwythos-9B-v2-GGUF:Q4_K_M \
+  --host 127.0.0.1 \
+  --port 8080 \
+  -ngl 99 \
+  -c 16384 \
+  -n 8192 \
+  --jinja \
+  -fa on \
+  --alias qwythos-9B-v2</code></pre>
+				<p>
+					現在のllama.cppでは、次の新しいCLI形式も案内されています。インストールしたバージョンのREADMEに合わせて使い分けてください。
+				</p>
+				<pre><code>llama serve -hf empero-ai/Qwythos-9B-v2-GGUF</code></pre>
+				<ul>
+					<li><code>-hf</code> はHugging Face上のモデルを指定し、必要なファイルを取得します。</li>
+					<li><code>--host 127.0.0.1 --port 8080</code> はローカルPCの8080番ポートで待ち受けます。</li>
+					<li><code>-ngl 99</code> は、可能な範囲でモデルのレイヤーをGPUへオフロードします。</li>
+					<li><code>-c 16384</code> はコンテキスト長、<code>-n 8192</code> は最大生成トークン数の例です。</li>
+					<li><code>--jinja</code> はチャットテンプレートを使い、<code>-fa on</code> はFlash Attentionを有効にします。</li>
+					<li><code>--alias</code> はAPI上で表示するモデル名を固定します。</li>
+				</ul>
+				<div class="notice">
+					<strong>Windowsではコマンドの書式に注意してください。</strong><br>
+					PowerShellやコマンドプロンプトで行末の <code>\</code> が継続記号として扱われない場合は、引数を1行にまとめて入力してください。
+					また、初回起動時はモデルのダウンロードが行われます。
+				</div>
+			</section>
+
+			<section>
+				<h2>Windowsでの構成と自動起動</h2>
+				<p>
+					Windowsでは、llama.cppのフォルダーに <code>llama-server.exe</code> を置き、
+					モデルのキャッシュ先や実行ファイルの場所を管理します。サーバーが起動すると、同じPC上のクライアントは次のURLから接続できます。
+				</p>
+				<pre><code>Windows
+ ├─ llama.cpp
+ ├─ llama-server.exe
+ │
+ └─ Qwen / Qwythos GGUF
+        ↓
+   http://127.0.0.1:8080</code></pre>
+				<p>
+					PC起動時に自動で立ち上げたい場合は、Windowsタスクスケジューラーにタスクを登録します。
+					「操作」のプログラムに <code>llama-server.exe</code> のフルパスを指定し、引数には次のような値を設定します。
+				</p>
+				<pre><code>-hf empero-ai/Qwythos-9B-v2-GGUF:Q4_K_M --host 127.0.0.1 --port 8080 -ngl 99 -c 16384 -n 8192 --jinja --alias qwythos-9B-v2</code></pre>
+				<p>
+					作業フォルダーもllama.cppの配置先に合わせて設定すると、相対パスを使う構成で迷いにくくなります。
+					タスク登録後は、手動で実行してサーバーが起動することと、ポート8080が待ち受け状態になることを確認してください。
+				</p>
+			</section>
+
+			<section>
+				<h2>起動できないときの確認ポイント</h2>
+				<ul>
+					<li>CUDA対応ビルドとNVIDIAドライバーが環境に合っているか確認します。</li>
+					<li>モデルの量子化方式とVRAM容量を確認し、必要ならコンテキスト長を下げます。</li>
+					<li>ポート8080が別のアプリケーションに使用されていないか確認します。</li>
+					<li>チャットの形式が不自然な場合は、モデルのchat templateと <code>--jinja</code> の設定を確認します。</li>
+					<li>サーバーログでモデルの読み込み、GPUオフロード、エラー内容を確認します。</li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>まとめ</h2>
+				<p>
+					Qwen系モデルは、対応するGGUF版を選び、llama.cppの <code>llama-server</code> から起動すると、
+					OpenAI互換APIとして利用できます。Q4_K_Mのような量子化版を使えば、ローカルGPUでもモデルサイズを抑えて試せます。
+				</p>
+				<p>
+					最初は小さめのコンテキスト長で動作を確認し、ログとVRAM使用量を見ながら設定を調整するのが現実的です。
+					利用前には、モデルカードのライセンス、対応機能、推奨テンプレートも確認してください。
+				</p>
+				<nav class="next-articles" aria-label="関連記事">
+					<a href="local-llm-pc.html">前の記事: RTX 2060での構築と実測項目</a>
+					<a href="ai-tool-comparison.html">次の記事: Ollama / LM Studio / llama.cppを比較 →</a>
+				</nav>
+			</section>
+		</article>
+	</main>
+
+	<footer>
+		<div>&copy; 2026 AI・PC活用ブログ</div>
+	</footer>
+</body>
+</html>
