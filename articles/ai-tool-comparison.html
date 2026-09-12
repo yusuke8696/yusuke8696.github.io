@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>ローカルAI開発環境を比較する | AI・PC活用ブログ</title>
+	<meta name="description" content="AI Agentを無料・ローカルで構築する視点から、クラウドLLM、Ollama、LM Studio、llama.cppを比較します。">
+	<style>
+		:root {
+			--ink: #202a35;
+			--muted: #657382;
+			--line: #dbe3e8;
+			--paper: #ffffff;
+			--canvas: #f3f6f5;
+			--accent: #0b756c;
+			--accent-dark: #07534e;
+			--accent-soft: #e4f3ef;
+			--code: #18232b;
+		}
+
+		* { box-sizing: border-box; }
+
+		body {
+			margin: 0;
+			color: var(--ink);
+			background: var(--canvas);
+			font-family: "Noto Sans JP", "Yu Gothic", sans-serif;
+			line-height: 1.85;
+		}
+
+		header {
+			padding: 22px 20px;
+			color: #fff;
+			background: linear-gradient(135deg, #123b46 0%, #07534e 55%, #0b756c 100%);
+		}
+
+		.header-inner, main, footer > div {
+			width: min(920px, 100%);
+			margin: 0 auto;
+		}
+
+		header a { color: #d8f4ed; font-size: 14px; text-decoration: none; }
+		header a:hover { text-decoration: underline; }
+		main { padding: 54px 20px 70px; }
+		.article-header, article, .notice {
+			background: var(--paper);
+			border: 1px solid var(--line);
+			border-radius: 10px;
+		}
+		.article-header { padding: 38px 42px; }
+		.eyebrow {
+			margin: 0 0 12px;
+			color: var(--accent);
+			font-size: 13px;
+			font-weight: 700;
+			letter-spacing: .08em;
+		}
+		h1, h2, h3 { line-height: 1.4; }
+		h1 { margin: 0; font-size: clamp(28px, 5vw, 42px); }
+		h2 { margin: 0 0 22px; font-size: 27px; }
+		h3 { margin: 30px 0 10px; font-size: 20px; }
+		p { margin: 0 0 18px; }
+		.lead { margin: 20px 0 0; color: #50606b; font-size: 17px; }
+		article { margin-top: 24px; padding: 36px 42px; }
+		section + section { margin-top: 46px; }
+
+		.comparison-wrap { overflow-x: auto; margin: 22px 0 12px; border: 1px solid var(--line); }
+		.comparison {
+			width: 100%;
+			min-width: 760px;
+			border-collapse: collapse;
+			background: #fbfcfc;
+			font-size: 14px;
+		}
+		.comparison th, .comparison td {
+			padding: 12px 14px;
+			border: 1px solid var(--line);
+			text-align: left;
+			vertical-align: top;
+		}
+		.comparison thead th { color: #fff; background: var(--accent-dark); }
+		.comparison tbody th { width: 18%; color: var(--accent-dark); background: var(--accent-soft); }
+		.comparison td strong { color: var(--accent-dark); }
+		.caption { color: var(--muted); font-size: 13px; }
+
+		.flow {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 10px;
+			margin: 25px 0;
+		}
+		.flow div {
+			position: relative;
+			padding: 18px 10px;
+			color: var(--accent-dark);
+			background: var(--accent-soft);
+			border-radius: 7px;
+			font-size: 14px;
+			font-weight: 700;
+			text-align: center;
+		}
+		.flow div:not(:last-child)::after {
+			position: absolute;
+			top: 50%;
+			right: -9px;
+			color: var(--accent);
+			content: ">";
+			transform: translateY(-50%);
+		}
+
+		.checklist {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 1px;
+			margin: 20px 0;
+			border: 1px solid var(--line);
+			background: var(--line);
+		}
+		.checklist div { padding: 13px 16px; background: #fbfcfc; }
+		.checklist strong { display: block; color: var(--accent-dark); }
+		.notice {
+			margin: 22px 0;
+			padding: 18px 20px;
+			border-left: 4px solid var(--accent);
+			border-radius: 0 7px 7px 0;
+		}
+		.notice strong { color: var(--accent-dark); }
+		.next-articles {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 12px;
+			margin-top: 24px;
+		}
+		.next-articles a {
+			display: block;
+			padding: 14px 16px;
+			color: var(--accent-dark);
+			background: var(--accent-soft);
+			border-radius: 7px;
+			font-weight: 700;
+			text-decoration: none;
+		}
+		.next-articles a:hover { text-decoration: underline; }
+		ul { padding-left: 1.4em; }
+		li + li { margin-top: 7px; }
+		a { color: var(--accent); }
+		footer { padding: 30px 20px; color: #c7d5d8; background: #182b31; font-size: 13px; }
+
+		@media (max-width: 640px) {
+			main { padding: 28px 14px 48px; }
+			.article-header, article { padding: 26px 20px; }
+			.checklist, .flow { grid-template-columns: 1fr; }
+			.next-articles { grid-template-columns: 1fr; }
+			.flow div:not(:last-child)::after {
+				top: auto;
+				right: 50%;
+				bottom: -14px;
+				content: "v";
+				transform: translateX(50%);
+			}
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<div class="header-inner">
+			<a href="../index.html">← AI・PC活用ブログに戻る</a>
+		</div>
+	</header>
+
+	<main>
+		<div class="article-header">
+			<p class="eyebrow">LOCAL AI / AI AGENT</p>
+			<h1>ローカルAI開発環境を比較する</h1>
+			<p class="lead">
+				AI Agentを無料・ローカルで構築するなら、Ollama、LM Studio、llama.cppのどれを選ぶべきか。
+				クラウドLLMとの違いも含めて、開発者目線で整理します。
+			</p>
+		</div>
+
+		<article>
+			<section>
+				<h2>この記事の比較軸</h2>
+				<p>
+					ここで比べるのは、単純なAIチャットサービスの使いやすさではありません。
+					今回のテーマは、<strong>「AI Agentを無料・ローカルで構築するなら何を使うか」</strong>です。
+				</p>
+				<p>
+					AI Agentでは、モデルを実行するだけでなく、エディターやツールから呼び出せるAPIが必要になります。
+					そのため、モデルの入手性、APIサーバー化、推論設定の細かさ、Clineなどのクライアントとの接続しやすさを重視します。
+				</p>
+				<div class="notice">
+					<strong>3記事の3本目として読む</strong><br>
+					前の2記事で、RTX 2060上の構成とQwen系モデルの導入を確認しました。ここでは、その経験をもとに実行環境を選びます。実測値を増やしたら、この比較の「軽量性」と「Clineとの組み合わせ」も更新できます。
+				</div>
+			</section>
+
+			<section>
+				<h2>4つの選択肢を比較</h2>
+				<div class="comparison-wrap">
+					<table class="comparison">
+						<thead>
+							<tr><th>項目</th><th>クラウドLLM<br>（ChatGPT等）</th><th>Ollama</th><th>LM Studio</th><th>llama.cpp</th></tr>
+						</thead>
+						<tbody>
+							<tr><th>実行場所</th><td>クラウド</td><td>ローカル</td><td>ローカル</td><td>ローカル</td></tr>
+							<tr><th>初期費用</th><td>サービスによる</td><td>無料</td><td>無料</td><td>無料</td></tr>
+							<tr><th>GGUFモデル</th><td>基本的に対象外</td><td>対応</td><td>対応</td><td>対応</td></tr>
+							<tr><th>API</th><td>提供サービスによる</td><td>あり</td><td>あり</td><td>あり</td></tr>
+							<tr><th>OpenAI互換</th><td>サービスによる</td><td>対応</td><td>対応</td><td><strong>対応</strong></td></tr>
+							<tr><th>GUI</th><td>あり</td><td>限定的</td><td><strong>◎</strong></td><td>基本はCLI</td></tr>
+							<tr><th>軽量性</th><td>PC負荷なし</td><td>○</td><td>△</td><td><strong>◎</strong></td></tr>
+							<tr><th>細かな推論設定</th><td>△</td><td>○</td><td>○</td><td><strong>◎</strong></td></tr>
+							<tr><th>Clineとの組み合わせ</th><td>○</td><td>○</td><td>○</td><td><strong>◎</strong></td></tr>
+						</tbody>
+					</table>
+				</div>
+				<p class="caption">
+					※概念比較です。実際の対応機能やAPI仕様はバージョンによって変わるため、導入前に各公式ドキュメントを確認してください。
+				</p>
+			</section>
+
+			<section>
+				<h2>Ollamaは導入のしやすさが強み</h2>
+				<p>
+					Ollamaは、ローカルLLMをまず動かしてみたい人に向いています。モデルの取得、管理、実行までの流れが整理されており、コマンドを覚えれば環境を作りやすいのが特徴です。
+				</p>
+				<ul>
+					<li>モデルのダウンロードと管理を簡単に始められる</li>
+					<li>ローカルAPIを利用でき、対応クライアントと接続しやすい</li>
+					<li>コマンドラインに慣れていない人でも情報を探しやすい</li>
+				</ul>
+				<p>
+					一方、今回のようにllama.cppの起動引数、GPUオフロード、コンテキスト長などを直接調整したい場合は、抽象化されている部分が少ないllama.cppのほうが扱いやすくなります。
+				</p>
+			</section>
+
+			<section>
+				<h2>LM StudioはGUIで試したい人向け</h2>
+				<p>
+					LM Studioは、モデルの検索やダウンロード、チャット、ローカルサーバーの起動をGUIで行いやすいツールです。ターミナル操作を減らして、まずモデルの応答や必要なメモリ量を確認したいときに便利です。
+				</p>
+				<div class="checklist">
+					<div><strong>GUI中心</strong>モデルの選択からチャットまで画面上で進められます。</div>
+					<div><strong>サーバー機能</strong>ローカルモデルをAPIとして公開できます。</div>
+					<div><strong>試行錯誤が簡単</strong>パラメータを画面から変えて挙動を確認できます。</div>
+					<div><strong>注意点</strong>CLIで設定を再現・自動化したい場合は別途確認が必要です。</div>
+				</div>
+			</section>
+
+			<section>
+				<h2>llama.cppは構成を細かく制御できる</h2>
+				<p>
+					llama.cppはコマンドライン中心の推論エンジンです。GGUFとの親和性が高く、CPUやGPUへのオフロード、コンテキスト長、バッチサイズなど、環境に合わせた設定を引数で細かく指定できます。
+				</p>
+				<div class="flow" aria-label="llama.cppとAI Agentの接続順">
+					<div>モデル<br>GGUF</div>
+					<div>llama.cpp</div>
+					<div>llama-server<br>API</div>
+					<div>Cline<br>AI Agent</div>
+				</div>
+				<p>
+					付属する <code>llama-server</code> を使うと、推論エンジンの上にHTTP APIサーバーを置けます。OpenAI互換のChat Completions、Responses、Embeddingsなどのエンドポイントが用意されており、function callingやmultimodalなどの対応機能もあります。
+				</p>
+				<p>
+					詳しい対応状況や起動オプションは、更新される可能性があるため、<a href="https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md" target="_blank" rel="noopener">llama.cppのserver公式ドキュメント</a>で確認してください。
+				</p>
+				<div class="notice">
+					<strong>細かく設定できることは、最初から簡単という意味ではありません。</strong><br>
+					モデルのチャットテンプレート、量子化方式、VRAM、コンテキスト長の組み合わせによって結果は変わります。最初は小さな設定で起動し、ログとメモリ使用量を確認しながら調整するのが現実的です。
+				</div>
+			</section>
+
+			<section>
+				<h2>Clineと組み合わせるなら</h2>
+				<p>
+					ClineのようなAI AgentからローカルLLMを使う場合は、クライアントが指定するAPI形式と、サーバーが公開するエンドポイントを合わせます。OpenAI互換APIに対応したサーバーなら、接続先URL、モデル名、APIキー欄の扱いを設定して利用できることがあります。
+				</p>
+				<ul>
+					<li>llama-serverを <code>127.0.0.1</code> などローカルアドレスで起動する</li>
+					<li>Cline側でOpenAI互換のプロバイダーとAPIベースURLを選ぶ</li>
+					<li>サーバー側のモデル名とCline側の指定名を合わせる</li>
+					<li>ツール利用やfunction callingが必要なら、モデルとバージョンの対応状況を確認する</li>
+				</ul>
+				<p>
+					この構成では、モデル、推論エンジン、APIサーバー、AI Agentを分離できます。モデルを差し替えてもクライアント側の設定を大きく変えずに試せる点が、開発環境としてのメリットです。
+				</p>
+			</section>
+
+			<section>
+				<h2>結局どれを選ぶか</h2>
+				<ul>
+					<li><strong>手軽にローカルLLMを始めたい</strong>ならOllama</li>
+					<li><strong>GUIでモデルを試したい</strong>ならLM Studio</li>
+					<li><strong>推論設定を細かく制御し、Clineと接続したい</strong>ならllama.cpp</li>
+					<li><strong>PC性能や管理を気にせず最高品質を使いたい</strong>ならクラウドLLM</li>
+				</ul>
+				<p>
+					ローカルAI Agentの構築という目的なら、今回の第一候補はllama.cppです。導入の簡単さを優先するならOllama、画面操作で動作確認したいならLM Studioというように、最初の選択と最終的な構成を分けて考えてもよいでしょう。
+				</p>
+			</section>
+
+			<section>
+				<h2>まとめ</h2>
+				<p>
+					OllamaとLM Studioは、ローカルLLMを簡単に試すための入口として便利です。一方、llama.cppはGGUFモデルを直接扱い、推論設定とAPIサーバーを細かく組み立てられます。
+				</p>
+				<p>
+					AI Agentを無料・ローカルで構築するなら、<code>モデル → llama.cpp → llama-server → OpenAI互換API → Cline</code> という分離構成が分かりやすい選択肢です。対応機能は更新されるため、実際に導入するときは各プロジェクトの公式ドキュメントとモデルカードを確認してください。
+				</p>
+				<nav class="next-articles" aria-label="関連記事">
+					<a href="local-llm-pc.html">構成の起点: RTX 2060での実測と使用感</a>
+					<a href="qwen-install.html">導入手順に戻る: Qwen系LLMをllama.cppで動かす</a>
+				</nav>
+			</section>
+		</article>
+	</main>
+
+	<footer>
+		<div>© 2026 AI・PC活用ブログ</div>
+	</footer>
+</body>
+</html>
