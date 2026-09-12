@@ -67,11 +67,10 @@ jobs:
           branch: article/issue-${{ steps.issue.outputs.number }}
           delete-branch: true
           commit-message: Add article draft for issue #${{ steps.issue.outputs.number }}
-          title: 記事案: ${{ steps.issue.outputs.title }}
+          title: "記事案: ${{ steps.issue.outputs.title }}"
           body: |
             Closes #${{ steps.issue.outputs.number }}
 
             このPull RequestはGitHub Actionsが作成した下書きです。
             マージ前に、事実関係・外部リンク・広告表記・著作権・個人情報を確認してください。
-          labels: automated-article
           draft: true
