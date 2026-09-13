@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Tailscale Serveを使い、localhostで動くllama-serverをスマートフォンやノートPC、GitHub Actionsから利用する構成と注意点を解説します。">
+  <title>TailscaleでローカルLLMへ外出先からアクセスする方法 | AI・PC活用ブログ</title>
+  <style>
+    :root { --ink:#202a35; --muted:#657382; --line:#dbe3e8; --paper:#fff; --canvas:#f3f6f5; --accent:#0b756c; --accent-dark:#07534e; --accent-soft:#e4f3ef; --code:#18232b; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--canvas); font-family:"Noto Sans JP","Yu Gothic",sans-serif; line-height:1.85; }
+    header { padding:22px 20px; color:#fff; background:linear-gradient(135deg,#123b46 0%,#07534e 55%,#0b756c 100%); }
+    .header-inner, main, footer > div { width:min(920px,100%); margin:0 auto; }
+    header a { color:#d8f4ed; font-size:14px; text-decoration:none; }
+    header a:hover { text-decoration:underline; }
+    main { padding:54px 20px 70px; }
+    .article-header, article { background:var(--paper); border:1px solid var(--line); border-radius:10px; }
+    .article-header { padding:38px 42px; }
+    .eyebrow { margin:0 0 12px; color:var(--accent); font-size:13px; font-weight:700; letter-spacing:.08em; }
+    h1,h2 { line-height:1.4; }
+    h1 { margin:0; font-size:clamp(28px,5vw,42px); }
+    h2 { margin:0 0 18px; font-size:26px; }
+    p { margin:0 0 18px; }
+    .lead { margin:20px 0 0; color:#50606b; font-size:17px; }
+    article { margin-top:24px; padding:36px 42px; }
+    section + section { margin-top:46px; }
+    pre { overflow-x:auto; margin:18px 0 24px; padding:20px; color:#e8f1f0; background:var(--code); border-radius:7px; font:14px/1.7 Consolas,"Courier New",monospace; }
+    code { padding:2px 5px; color:var(--accent-dark); background:#edf4f2; border-radius:3px; font: .92em Consolas,"Courier New",monospace; }
+    pre code { padding:0; color:inherit; background:none; }
+    .notice { margin:22px 0; padding:18px 20px; border-left:4px solid var(--accent); background:#f5faf8; border-radius:0 7px 7px 0; }
+    .steps { padding-left:1.5em; }
+    li + li { margin-top:8px; }
+    a { color:var(--accent); }
+    .related a { display:inline-block; padding:12px 16px; background:var(--accent-soft); border-radius:7px; font-weight:700; }
+    footer { padding:30px 20px; color:#c7d5d8; background:#182b31; font-size:13px; }
+    @media (max-width:640px) { main { padding:28px 14px 48px; } .article-header,article { padding:26px 20px; } }
+  </style>
+</head>
+<body>
+  <header><div class="header-inner"><a href="../index.html">← AI・PC活用ブログに戻る</a></div></header>
+  <main>
+    <div class="article-header">
+      <p class="eyebrow">LOCAL AI / REMOTE ACCESS</p>
+      <h1>TailscaleでローカルLLMへ外出先からアクセスする方法</h1>
+      <p class="lead">自宅PCの <code>llama-server</code> をlocalhostのまま動かし、スマートフォン、ノートPC、GitHub Actionsからtailnet経由で利用する方法を整理します。</p>
+    </div>
+    <article>
+      <section>
+        <h2>構成と前提</h2>
+        <p>Windows PCで動く <code>llama-server</code> のHTTP APIを、同じtailnetに参加した端末から使います。Tailscale Serveがtailnet内のHTTPS URLへのリクエストを、PC内の <code>127.0.0.1:8080</code> に転送します。</p>
+        <pre><code>スマートフォン / ノートPC / GitHub Actions
+             ↓ tailnet内のHTTPS URL
+       Tailscale Serve（自宅PC）
+             ↓ http://127.0.0.1:8080
+           llama-server</code></pre>
+        <p>自宅PCの電源とネットワーク接続、Tailscale、llama-serverが使える状態であることが必要です。Tailscale Serveはtailnet内向けで、公開インターネットから誰でも接続できる設定にはなりません。</p>
+      </section>
+      <section>
+        <h2>1. Windows PCと利用端末をtailnetへ参加させる</h2>
+        <p><a href="https://tailscale.com/download" target="_blank" rel="noopener">Tailscale公式サイト</a>からWindows PCとスマートフォン、またはノートPCにアプリを導入し、同じtailnetへ参加させます。接続可能な相手はtailnetのアクセス制御設定にも従います。</p>
+        <p>ServeでHTTPSのURLを使うには、tailnetでHTTPS証明書を有効にします。未設定の場合、ServeのCLIから表示される案内に従って設定できます。</p>
+      </section>
+      <section>
+        <h2>2. llama-serverをlocalhostで起動する</h2>
+        <p>モデルの指定は利用環境に合わせ、WindowsのPowerShellで例えば次のように起動します。</p>
+        <pre><code>llama-server -hf &lt;モデルの指定&gt; --host 127.0.0.1 --port 8080</code></pre>
+        <p>まず同じPCで <code>http://127.0.0.1:8080/v1/models</code> を開き、サーバーが応答することを確認します。<code>--host 127.0.0.1</code> のままなら、llama-server自体をLAN全体へ公開せずに済みます。</p>
+      </section>
+      <section>
+        <h2>3. Tailscale Serveで共有する</h2>
+        <p>Windows PCで別のターミナルを開き、次を実行します。</p>
+        <pre><code>tailscale serve 8080</code></pre>
+        <p>表示された <code>https://&lt;端末名&gt;.&lt;tailnet名&gt;.ts.net</code> 形式のURLを控えます。このコマンドは通常フォアグラウンドで動くため、ターミナルを閉じたり <code>Ctrl+C</code> を押したりすると共有が止まります。</p>
+        <p>同じtailnetへ参加したスマートフォンやノートPCから、表示されたURLに <code>/v1/models</code> を付けてアクセスします。</p>
+        <pre><code>https://&lt;表示されたホスト名&gt;/v1/models</code></pre>
+        <div class="notice"><strong>接続できない場合</strong><br>両端末が同じtailnetに参加しているか、Windows PC上のllama-serverが起動しているか、HTTPS証明書とtailnetのアクセス制御が適切かを順に確認します。</div>
+      </section>
+      <section>
+        <h2>ServeとFunnelの違い</h2>
+        <p><strong>Serve</strong> はtailnet内の端末向け、<strong>Funnel</strong> は公開インターネット向けの機能です。自分の端末や接続を許可したGitHub Actionsから使う用途ならServeを選びます。LLM APIには別途の認証を設けていない場合もあるため、tailnetの参加端末とアクセスルールを管理してください。</p>
+      </section>
+      <section>
+        <h2>GitHub Actionsから利用する場合</h2>
+        <p><a href="https://tailscale.com/docs/integrations/github/github-action" target="_blank" rel="noopener">Tailscale公式GitHub Action</a>をworkflowへ追加すると、runnerが一時的なtailnetノードとして参加し、後続のステップから自宅PCのServe URLにアクセスできます。例えば記事生成の推論処理だけを自宅PCのGPUで実行できます。</p>
+        <ol class="steps">
+          <li>Tailscale側にCI用のタグと認証設定を作成します。公式手順ではWorkload Identity Federationを推奨しています。</li>
+          <li>GitHub側には必要な値をSecretsで登録し、workflowで <code>tailscale/github-action@v4</code> を実行します。連携方式に応じた設定を公式手順で確認してください。</li>
+          <li>後続のステップで、ServeのURLに <code>/v1/models</code> を付けて疎通を確認します。CI用タグから自宅PCへの接続をTailscaleのアクセス制御で許可します。</li>
+        </ol>
+        <div class="notice"><strong>運用上の注意</strong><br>Workload Identity Federationにはworkflowの <code>id-token: write</code> 権限が必要です。認証情報をworkflowファイルへ直接記載せず、外部から送られる未信頼のプロンプトやPRからこの接続を使わせる場合は、workflowの起動条件と権限も確認してください。自宅PCが停止中ならrunnerからのAPI呼び出しは失敗します。</div>
+      </section>
+      <section>
+        <h2>まとめ</h2>
+        <p>llama-serverを <code>127.0.0.1:8080</code> で起動し、<code>tailscale serve 8080</code> でtailnet内へ共有すれば、外出先の端末からローカルLLMを利用できます。GitHub Actionsも公式Actionでtailnetに参加させる構成が可能です。</p>
+        <p class="related"><a href="qwen-install.html">関連記事：Qwen系ローカルLLMをllama.cppで動かす →</a></p>
+      </section>
+      <section>
+        <h2>参考資料</h2>
+        <ul>
+          <li><a href="https://tailscale.com/docs/features/tailscale-serve" target="_blank" rel="noopener">Tailscale Serve（公式ドキュメント）</a></li>
+          <li><a href="https://tailscale.com/docs/features/tailscale-funnel" target="_blank" rel="noopener">Tailscale Funnel（公式ドキュメント）</a></li>
+          <li><a href="https://tailscale.com/docs/integrations/github/github-action" target="_blank" rel="noopener">Tailscale GitHub Action（公式ドキュメント）</a></li>
+        </ul>
+      </section>
+    </article>
+  </main>
+  <footer><div>&copy; 2026 AI・PC活用ブログ</div></footer>
+</body>
+</html>
