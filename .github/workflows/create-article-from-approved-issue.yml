@@ -55,9 +55,9 @@ jobs:
 
           Create exactly one new, self-contained Japanese HTML article under articles/ using a lowercase-hyphenated filename. Use existing article HTML files only as the visual and structural reference. Convert only the Issue's 記事本文（Markdown） into original HTML and use 記事の要約 where appropriate.
 
-          Use an affiliate link only if the Issue's 使用を許可するアフィリエイトリンク field is non-empty. In that case, copy that exact HTML code without changing it and show a clear affiliate disclosure. Otherwise, add no affiliate link.
+          Read .github/approved-affiliate-links.md before deciding on affiliate content. If the Issue's 使用を許可するアフィリエイトリンク field contains HTML, copy that exact code without changing it. If the field is empty, you may use one registry entry only when its stated topic is directly related to the article. If the field says 「なし」, do not add an affiliate link. In every case, show a clear affiliate disclosure when an affiliate link is used.
 
-          Do not invent facts, sources, prices, experiences, affiliate links, personal information, or credentials. Do not add scripts, analytics IDs, server-side code, or external assets except the exact affiliate HTML supplied in the Issue.
+          Do not invent facts, sources, prices, experiences, affiliate links, personal information, or credentials. Do not add scripts, analytics IDs, server-side code, or external assets except exact affiliate HTML supplied in the Issue or copied from the approved registry.
 
           Do not edit existing articles, index.html, sitemap.xml, workflows, instructions, or skills. Do not merge, deploy, close the Issue, or change labels. Before committing, run git diff --check. If the required fields are missing, the article already exists, or a branch for Issue ${ISSUE_NUMBER} already exists, stop without changing files.
 

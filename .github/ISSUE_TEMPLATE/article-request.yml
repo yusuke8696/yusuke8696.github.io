@@ -32,7 +32,7 @@ body:
     id: affiliate_links
     attributes:
       label: 使用を許可するアフィリエイトリンク
-      description: 必要な場合のみ、正確なリンクを入力してください。空欄ならリンクは追加しません。
+      description: 必要な場合のみ、正確なHTMLを入力してください。空欄なら、承認済みリンク台帳からテーマに直接関連するコードだけを使用できます。リンクを使わない場合は「なし」と入力してください。
   - type: checkboxes
     id: confirmations
     attributes:

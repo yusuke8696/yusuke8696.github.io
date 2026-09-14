@@ -7,7 +7,7 @@ This repository is a public GitHub Pages affiliate blog. Treat every file and it
 - Never create, request, repeat, or commit secrets: API keys, access tokens, passwords, private keys, `.env` values, GitHub Actions secrets, login URLs containing credentials, or service-account files.
 - Never include the blog owner's personal information unless it is already deliberately published in the repository: real name, home address, private email address, telephone number, birth date, or account identifiers.
 - Do not add analytics, advertising, affiliate-network, or third-party service credentials. If a feature requires a secret, explain what environment variable or GitHub Actions Secret the owner must configure; do not supply a value or put a placeholder that resembles a real credential.
-- An affiliate link that the owner has explicitly provided may be included in published article content. Do not invent affiliate links, tracking IDs, or login details.
+- An affiliate link that the owner has explicitly provided, or that appears in `.github/approved-affiliate-links.md`, may be included in published article content. Use a registry entry only when its stated topic is directly related to the article, and copy its complete HTML code without alteration. Do not invent affiliate links, tracking IDs, or login details.
 - Before proposing a commit, check that no secret or personal data has been added. If any is found, stop and tell the owner what must be removed or rotated.
 
 ## Article writing
