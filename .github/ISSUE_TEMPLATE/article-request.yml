@@ -1,0 +1,44 @@
+name: 記事作成依頼
+description: 確認済みのテーマから記事の下書きPRを作成します。
+title: "記事案: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        内容を確認してから、このIssueに `article-approved` ラベルを付けてください。
+        ラベルを付けるまでは記事・PRは作成されません。
+  - type: input
+    id: summary
+    attributes:
+      label: 記事の要約
+      description: トップページに表示する短い説明です。
+      placeholder: 例: ローカルAIを初めて試すための基本構成を整理します。
+    validations:
+      required: true
+  - type: textarea
+    id: article_body
+    attributes:
+      label: 記事本文（Markdown）
+      description: ChatGPTなどで作成・確認したMarkdown本文を貼り付けてください。HTMLは貼り付けないでください。
+      placeholder: |
+        ## 見出し
+        本文を入力します。
+
+        - 箇条書き1
+        - 箇条書き2
+    validations:
+      required: true
+  - type: textarea
+    id: affiliate_links
+    attributes:
+      label: 使用を許可するアフィリエイトリンク
+      description: 必要な場合のみ、正確なリンクを入力してください。空欄ならリンクは追加しません。
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: 確認
+      options:
+        - label: 入力内容は公開してよく、個人情報・秘密情報を含みません。
+          required: true
+        - label: 実体験、口コミ、価格、収益、ランキングなどを根拠なく記載していません。
+          required: true
