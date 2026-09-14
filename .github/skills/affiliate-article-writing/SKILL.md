@@ -14,7 +14,7 @@ The repository-wide public-repository instructions always apply. Write in Japane
 1. Identify the intended reader, article goal, and the product or service. Ask only for information that is essential to avoid inventing facts.
 2. Write an original, reader-first structure: title, introduction, useful explanation, limitations or who it is not suitable for, conclusion, and a natural call to action.
 3. Include the disclosure `当サイトはアフィリエイト広告を利用しています。` prominently at the start of an article that contains affiliate links. Add `広告` or `PR` near individual promotional content when context makes it necessary for a reader to recognize it as promotional.
-4. Use an affiliate link only when the owner provides the exact link or explicitly asks to insert a designated placeholder. Never invent a tracking ID, campaign, discount, price, or product experience.
+4. Use an affiliate link only when the owner provides the exact link, or when `.github/approved-affiliate-links.md` contains a directly relevant approved entry. Copy the complete approved HTML code without alteration. Never invent a tracking ID, campaign, discount, price, or product experience.
 5. Treat prices, specifications, availability, rankings, campaign conditions, and laws as time-sensitive. Verify them from an official source if available; otherwise use non-specific wording and mark the item for owner review.
 6. Do not claim personal use, test results, expertise, earnings, health effects, legal outcomes, or financial outcomes unless the owner supplied reliable, publishable evidence. Avoid guarantees and superlatives without evidence.
 7. Cite or link to the source of material factual claims. Do not reproduce third-party writing, reviews, images, tables, or charts without permission.
