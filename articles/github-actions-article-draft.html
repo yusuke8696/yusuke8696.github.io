@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>GitHub Actionsで記事作成を自動化する前に確認すること | AI・PC活用ブログ</title>
+	<meta name="description" content="GitHub ActionsとGitHub Copilotを使って記事下書きを作る前に、ラベル、Pull Request、事実確認の運用で確認したい項目を整理します。">
+	<style>
+		:root {
+			--ink: #202a35;
+			--muted: #657382;
+			--line: #dbe3e8;
+			--paper: #ffffff;
+			--canvas: #f3f6f5;
+			--accent: #0b756c;
+			--accent-dark: #07534e;
+			--accent-soft: #e4f3ef;
+		}
+
+		* { box-sizing: border-box; }
+
+		body {
+			margin: 0;
+			color: var(--ink);
+			background: var(--canvas);
+			font-family: "Noto Sans JP", "Yu Gothic", sans-serif;
+			line-height: 1.85;
+		}
+
+		header {
+			padding: 22px 20px;
+			color: #fff;
+			background: linear-gradient(135deg, #123b46 0%, #07534e 55%, #0b756c 100%);
+		}
+
+		.header-inner, main, footer > div {
+			width: min(920px, 100%);
+			margin: 0 auto;
+		}
+
+		header a {
+			color: #d8f4ed;
+			font-size: 14px;
+			text-decoration: none;
+		}
+
+		header a:hover { text-decoration: underline; }
+		main { padding: 54px 20px 70px; }
+
+		.article-header, article, .notice {
+			background: var(--paper);
+			border: 1px solid var(--line);
+			border-radius: 10px;
+		}
+
+		.article-header { padding: 38px 42px; }
+
+		.eyebrow {
+			margin: 0 0 12px;
+			color: var(--accent);
+			font-size: 13px;
+			font-weight: 700;
+			letter-spacing: .08em;
+		}
+
+		h1, h2 { line-height: 1.4; }
+		h1 { margin: 0; font-size: clamp(28px, 5vw, 42px); }
+		h2 { margin: 0 0 22px; font-size: 27px; }
+		p { margin: 0 0 18px; }
+		.lead { margin: 20px 0 0; color: #50606b; font-size: 17px; }
+
+		article {
+			margin-top: 24px;
+			padding: 36px 42px;
+		}
+
+		section + section { margin-top: 46px; }
+
+		.flow {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 10px;
+			margin: 25px 0;
+		}
+
+		.flow div {
+			position: relative;
+			padding: 18px 10px;
+			color: var(--accent-dark);
+			background: var(--accent-soft);
+			border-radius: 7px;
+			font-size: 14px;
+			font-weight: 700;
+			text-align: center;
+		}
+
+		.flow div:not(:last-child)::after {
+			position: absolute;
+			top: 50%;
+			right: -9px;
+			color: var(--accent);
+			content: ">";
+			transform: translateY(-50%);
+		}
+
+		.checklist {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 1px;
+			margin: 20px 0;
+			border: 1px solid var(--line);
+			background: var(--line);
+		}
+
+		.checklist div {
+			padding: 16px;
+			background: #fbfcfc;
+		}
+
+		.checklist strong {
+			display: block;
+			margin-bottom: 6px;
+			color: var(--accent-dark);
+		}
+
+		.notice {
+			margin: 22px 0;
+			padding: 18px 20px;
+			border-left: 4px solid var(--accent);
+			border-radius: 0 7px 7px 0;
+		}
+
+		.notice strong { color: var(--accent-dark); }
+		ul { padding-left: 1.4em; }
+		li + li { margin-top: 7px; }
+
+		footer {
+			padding: 30px 20px;
+			color: #c7d5d8;
+			background: #182b31;
+			font-size: 13px;
+		}
+
+		@media (max-width: 640px) {
+			main { padding: 28px 14px 48px; }
+			.article-header, article { padding: 26px 20px; }
+			.checklist, .flow { grid-template-columns: 1fr; }
+			.flow div:not(:last-child)::after {
+				top: auto;
+				right: 50%;
+				bottom: -14px;
+				content: "v";
+				transform: translateX(50%);
+			}
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<div class="header-inner">
+			<a href="../index.html">← AI・PC活用ブログに戻る</a>
+		</div>
+	</header>
+
+	<main>
+		<div class="article-header">
+			<p class="eyebrow">AUTOMATION / ARTICLE WORKFLOW</p>
+			<h1>GitHub Actionsで記事作成を自動化する前に確認すること</h1>
+			<p class="lead">
+				GitHub ActionsとGitHub Copilotを使い、確認済みのIssueから記事下書きを作る流れを安全に運用するための確認項目を整理します。
+			</p>
+		</div>
+
+		<article>
+			<section>
+				<h2>自動化の範囲を下書きまでにする</h2>
+				<p>
+					GitHub Actionsを使うと、リポジトリ上の決まった操作をきっかけに処理を実行できます。
+					AIを使って記事を作る場合でも、最初から公開までを自動化するのではなく、
+					まずは下書きPull Requestの作成までにとどめる運用が考えられます。
+				</p>
+				<div class="flow" aria-label="記事作成の確認フロー">
+					<div>確認済みIssue</div>
+					<div>記事下書き作成</div>
+					<div>Pull Request確認</div>
+					<div>人が公開判断</div>
+				</div>
+				<p>
+					下書きができた段階で人が内容を確認すれば、生成された文章をそのまま公開せずに済みます。
+					自動化の便利さと、公開前の確認を分けて設計することが重要です。
+				</p>
+				<div class="notice">
+					<strong>この記事の位置づけ</strong><br>
+					この記事は、GitHub ActionsとGitHub Copilotを使った記事下書き作成の設定確認を目的に、
+					公開前に見直したい運用上の項目をまとめたものです。
+				</div>
+			</section>
+
+			<section>
+				<h2>最初に確認したい3つの項目</h2>
+				<div class="checklist">
+					<div>
+						<strong>1. トリガー</strong>
+						記事作成を開始するラベルを、意図せず付けない運用になっているか確認します。
+					</div>
+					<div>
+						<strong>2. 変更内容</strong>
+						Pull Requestに含まれる記事の差分を、人が確認できる状態になっているか見ます。
+					</div>
+					<div>
+						<strong>3. 公開前確認</strong>
+						事実関係と広告表記を、公開前に見直す手順が用意されているか確認します。
+					</div>
+				</div>
+				<p>
+					この3点は、ワークフローが正常に実行されるかだけでなく、生成された記事を公開するまでの流れに関わります。
+					設定が動作していても、確認の役割やタイミングが曖昧なままでは、意図しない内容が公開される可能性があります。
+				</p>
+			</section>
+
+			<section>
+				<h2>ラベルをトリガーにするときの注意</h2>
+				<p>
+					記事作成の開始条件としてラベルを使う場合は、対象のラベルを誤って付けないことが大切です。
+					付与する人やタイミングを決め、確認前のIssueに開始用ラベルを付けないようにします。
+				</p>
+				<ul>
+					<li>記事の入力内容を確認してから、開始用ラベルを付ける</li>
+					<li>似た名前のラベルと取り違えない</li>
+					<li>意図しないIssueが処理対象になっていないか確認する</li>
+				</ul>
+				<div class="notice">
+					<strong>ラベル付与は公開許可そのものではありません。</strong><br>
+					ラベルをきっかけに下書きを作成できても、記事の公開判断はPull Request上で別に行います。
+				</div>
+			</section>
+
+			<section>
+				<h2>Pull Requestの変更内容を確認する</h2>
+				<p>
+					自動作成されたPull Requestでは、追加されたファイルと本文の差分を確認します。
+					見出しや段落が意図した内容になっているか、Issueにない情報が加えられていないかを読み合わせます。
+				</p>
+				<p>
+					記事ファイルだけが変更対象になっているかも確認したい項目です。
+					下書き作成の目的と関係ないファイルに変更が含まれている場合は、その理由を確認してから判断します。
+				</p>
+			</section>
+
+			<section>
+				<h2>公開前に事実関係と広告表記を確認する</h2>
+				<p>
+					記事を公開する前に、書かれている事実関係を確認します。
+					自動生成された文章であっても、内容が正しいことを自動的に保証するものではありません。
+				</p>
+				<p>
+					広告やアフィリエイトリンクを含む場合は、読者が広告だと分かる表記になっているかも確認します。
+					リンクの有無や表示内容を、記事の差分とあわせて見直します。
+				</p>
+				<div class="notice">
+					<strong>確認を終えてから公開する</strong><br>
+					この記事の流れでは、Issueの確認、下書きPull Requestの確認、事実関係と広告表記の確認を経てから、
+					人がPull Requestをマージします。
+				</div>
+			</section>
+
+			<section>
+				<h2>まとめ</h2>
+				<p>
+					GitHub ActionsとGitHub Copilotを使えば、確認済みのIssueをもとに記事下書きを作る流れを組み立てられます。
+					ただし、最初は公開までを自動化せず、下書きPull Requestの作成までに範囲を限定するほうが確認しやすくなります。
+				</p>
+				<p>
+					運用時は、トリガーとなるラベル、Pull Requestの変更内容、公開前の事実関係と広告表記を順番に確認します。
+					このIssueは設定確認用のため、記事として公開する場合も内容を見直してからPull Requestをマージします。
+				</p>
+			</section>
+		</article>
+	</main>
+
+	<footer>
+		<div>&copy; 2026 AI・PC活用ブログ</div>
+	</footer>
+</body>
+</html>
