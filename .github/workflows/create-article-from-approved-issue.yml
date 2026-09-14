@@ -61,7 +61,7 @@ jobs:
 
           Do not edit existing articles, index.html, sitemap.xml, workflows, instructions, or skills. Do not merge, deploy, close the Issue, or change labels. Before committing, run git diff --check. If the required fields are missing, the article already exists, or a branch for Issue ${ISSUE_NUMBER} already exists, stop without changing files.
 
-          Create and check out a branch named article/issue-${ISSUE_NUMBER}-<slug>, commit only the new article, then push it to origin. Do not create a pull request; a later restricted step will do that." -s --no-ask-user --allow-tool='write,shell(git:*)'
+          Create and check out a branch named article/issue-${ISSUE_NUMBER}-<slug>, commit only the new article, then push it to origin. Do not create a pull request; a later restricted step will do that." -s --no-ask-user --add-dir="$RUNNER_TEMP" --allow-tool='read,write,shell(git:*)'
 
       - name: Verify the generated change and open a draft pull request
         env:
