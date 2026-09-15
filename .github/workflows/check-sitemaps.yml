@@ -1,0 +1,35 @@
+name: Check sitemaps
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build with GitHub Pages Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+      - name: Validate generated XML and article coverage
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          ns = {'s': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+          base = 'https://yusuke8696.github.io/'
+          expected = {base} | {base + p.as_posix() for p in Path('articles').rglob('*.html')}
+          for name in ('sitemap_google.xml', 'sitemap_bing.xml'):
+              root = ET.parse(Path('_site') / name).getroot()
+              assert root.tag == '{%s}urlset' % ns['s']
+              urls = [loc.text for loc in root.findall('s:url/s:loc', ns)]
+              assert len(urls) == len(set(urls)), urls
+              assert set(urls) == expected, (name, urls, expected)
+          assert Path('_site/sitemap_google.xml').read_bytes() == Path('_site/sitemap_bing.xml').read_bytes()
+          assert Path('_site/sitemap.xml').read_bytes() == Path('sitemap.xml').read_bytes()
+          print('Sitemaps valid; all articles covered; legacy sitemap preserved.')
+          PY
