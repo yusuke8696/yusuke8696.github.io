@@ -29,7 +29,16 @@ jobs:
               urls = [loc.text for loc in root.findall('s:url/s:loc', ns)]
               assert len(urls) == len(set(urls)), urls
               assert set(urls) == expected, (name, urls, expected)
-          assert Path('_site/sitemap_google.xml').read_bytes() == Path('_site/sitemap_bing.xml').read_bytes()
+          import datetime
+          import json
+          dates = json.loads(Path('_data/sitemap_dates.json').read_text())
+          google = ET.parse('_site/sitemap_google.xml').getroot()
+          for entry in google.findall('s:url', ns):
+              url = entry.find('s:loc', ns).text
+              key = url.removeprefix(base) or 'index.html'
+              lastmod = entry.find('s:lastmod', ns)
+              assert lastmod is not None and lastmod.text == dates[key]
+              datetime.date.fromisoformat(lastmod.text)
           assert Path('_site/sitemap.xml').read_bytes() == Path('sitemap.xml').read_bytes()
           print('Sitemaps valid; all articles covered; legacy sitemap preserved.')
           PY
