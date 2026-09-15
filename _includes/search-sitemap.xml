@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://yusuke8696.github.io/</loc></url>
+{%- assign documents = site.static_files | concat: site.pages | sort: 'path' -%}
+{%- for document in documents -%}
+  {%- assign prefix = document.path | slice: 0, 9 -%}
+  {%- assign extension = document.path | split: '.' | last -%}
+  {%- if prefix == 'articles/' and extension == 'html' and document.sitemap != false and document.draft != true %}
+  <url><loc>{{ document.path | prepend: 'https://yusuke8696.github.io/' | xml_escape }}</loc></url>
+  {%- endif -%}
+{%- endfor %}
+</urlset>
