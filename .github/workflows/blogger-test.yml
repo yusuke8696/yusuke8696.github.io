@@ -1,0 +1,40 @@
+name: Blogger Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get access token
+        id: auth
+        run: |
+          RESPONSE=$(curl -s -X POST https://oauth2.googleapis.com/token \
+            -d client_id="${{ secrets.BLOGGER_CLIENT_ID }}" \
+            -d client_secret="${{ secrets.BLOGGER_CLIENT_SECRET }}" \
+            -d refresh_token="${{ secrets.BLOGGER_REFRESH_TOKEN }}" \
+            -d grant_type=refresh_token)
+
+          ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token')
+
+          if [ "$ACCESS_TOKEN" = "null" ]; then
+            echo "$RESPONSE"
+            exit 1
+          fi
+
+          echo "access_token=$ACCESS_TOKEN" >> "$GITHUB_OUTPUT"
+
+      - name: Create Blogger draft
+        run: |
+          jq -n \
+            --arg title "GitHub Actions 投稿テスト" \
+            --arg content "<p>GitHub ActionsからBlogger APIを使用して投稿したテスト記事です。</p>" \
+            '{title: $title, content: $content}' > post.json
+
+          curl --fail-with-body -X POST \
+            "https://www.googleapis.com/blogger/v3/blogs/${{ secrets.BLOGGER_BLOG_ID }}/posts?isDraft=true" \
+            -H "Authorization: Bearer ${{ steps.auth.outputs.access_token }}" \
+            -H "Content-Type: application/json" \
+            --data-binary @post.json
