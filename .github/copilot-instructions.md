@@ -25,3 +25,7 @@ This repository is a public GitHub Pages affiliate blog. Treat every file and it
 
 - Use generic placeholders such as `YOUR_ANALYTICS_ID` only in documentation when necessary, and state that they must not be committed with real values.
 - Prefer links to official sources for factual claims that may change, and identify when information needs the owner's review before publication.
+
+## Automatic article listings
+
+- Start new articles/*.html files with YAML front matter containing layout: null, title, description, and a quoted published_date (YYYY-MM-DD, actual publication date). Keep the complete HTML document after the closing --- delimiter. Jekyll automatically adds the article to the homepage; do not edit index.html for each article.

@@ -30,3 +30,20 @@ PRの `Check sitemaps` は実際のPages用Jekyllビルドと3種類のXML解析
 既存XMLもGoogleの対応形式です。URLを分けるだけでGoogleの取得エラーが解消する保証はありません。
 
 参考: [Google公式の対応サイトマップ形式](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap?hl=ja)
+
+## 記事一覧の自動更新
+
+mainへのマージとPagesビルドで、トップページの新着6件（公開日の降順）と全記事一覧に自動反映します。JavaScript不要のHTMLリンクなので、Googleはトップページから記事を辿れます。インデックス登録の時期・実施を保証する機能ではありません。
+
+`articles/` 配下のHTMLの先頭に次を記載し、その後に既存と同様のHTML本文を置いてください。公開日は実際の日付を指定します。記事URLは変わりません。
+
+```yaml
+---
+layout: null
+title: "記事タイトル"
+description: "記事の概要"
+published_date: "2026-09-19"
+---
+```
+
+この情報がないHTMLも、ファイル名を表示名として全記事一覧に掲載します。新着欄でタイトルや概要を表示する場合は上記情報を付けてください。全記事一覧は現在トップページ内に全件掲載します。

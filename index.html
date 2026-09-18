@@ -1,3 +1,6 @@
+---
+layout: null
+---
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -82,7 +85,7 @@
             <a class="brand" href="index.html">AI・PC活用ブログ</a>
             <nav class="site-nav" aria-label="メインナビゲーション">
                 <a href="#about">このブログについて</a>
-                <a href="#articles">記事一覧</a>
+                <a href="#all-articles">全記事一覧</a>
                 <a href="#categories">カテゴリ</a>
             </nav>
         </div>
@@ -119,34 +122,7 @@
             </div>
         </section>
 
-        <section id="articles" class="section" aria-labelledby="articles-heading">
-            <div class="section-heading">
-                <div>
-                    <h2 id="articles-heading">まず読みたい記事</h2>
-                    <p>ローカルLLMを試すための基本を、順番に読めるようにしています。</p>
-                </div>
-            </div>
-            <div class="article-grid">
-                <article class="article-card">
-                    <span class="badge">ローカルLLM</span>
-                    <h3><a href="articles/local-llm-pc.html">RTX 2060でローカルLLM＋AI Agent環境を構築</a></h3>
-                    <p>GPUメモリ、コンテキスト長、llama-serverの設定など、ローカル環境を作る際の確認ポイントを整理します。</p>
-                    <a class="read-more" href="articles/local-llm-pc.html">記事を読む →</a>
-                </article>
-                <article class="article-card">
-                    <span class="badge">ローカルLLM</span>
-                    <h3><a href="articles/qwen-install.html">Qwen系ローカルLLMをllama.cppで動かす</a></h3>
-                    <p>GGUF量子化モデルの選び方から、llama-serverでの起動とローカルAPI利用までを解説します。</p>
-                    <a class="read-more" href="articles/qwen-install.html">記事を読む →</a>
-                </article>
-                <article class="article-card">
-                    <span class="badge">AIツール</span>
-                    <h3><a href="articles/ai-tool-comparison.html">Ollama / LM Studio / llama.cppを比較する</a></h3>
-                    <p>始めやすさ、設定の自由度、AI Agentとの接続という観点から、実行環境を比較します。</p>
-                    <a class="read-more" href="articles/ai-tool-comparison.html">記事を読む →</a>
-                </article>
-            </div>
-        </section>
+        {% include article-list.html %}
 
         <section id="categories" class="section" aria-labelledby="categories-heading">
             <div class="section-heading">

@@ -46,3 +46,23 @@ jobs:
               assert Path('_site', name).read_bytes() == Path(name).read_bytes()
           print('Plugin and custom sitemaps valid; all articles covered; verification files preserved.')
           PY
+      - name: Validate homepage article links
+        run: python3 .github/scripts/check-article-links.py
+      - name: Add temporary articles to verify automatic discovery
+        run: |
+          cat > articles/ci-new-article.html <<'EOF'
+          ---
+          layout: null
+          title: "CI & 新着記事"
+          published_date: "2099-01-01"
+          ---
+          <!doctype html><html lang="ja"><title>CI article</title><p>Temporary test article</p></html>
+          EOF
+          echo '<!doctype html><html><title>Plain article</title></html>' > articles/ci-plain-article.html
+      - name: Rebuild with temporary articles
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+      - name: Verify new articles appear without editing the homepage
+        run: python3 .github/scripts/check-article-links.py
