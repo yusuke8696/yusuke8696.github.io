@@ -8,7 +8,7 @@
     {% assign shown = 0 %}
     {% for article in articles %}
       {% assign prefix = article.path | slice: 0, 9 %}
-      {% if prefix == 'articles/' and article.ext == '.html' %}
+      {% assign extension = article.path | split: '.' | last %}{% if prefix == 'articles/' and extension == 'html' %}
         {% if shown < 6 %}
         <article class="article-card">
           {% if article.published_date %}<time class="badge" datetime="{{ article.published_date | escape }}">{{ article.published_date | escape }}</time>{% endif %}
@@ -27,7 +27,7 @@
   <div class="panel"><ul>
     {% for article in articles %}
       {% assign prefix = article.path | slice: 0, 9 %}
-      {% if prefix == 'articles/' and article.ext == '.html' %}
+      {% assign extension = article.path | split: '.' | last %}{% if prefix == 'articles/' and extension == 'html' %}
       <li><a href="{{ article.url | relative_url | escape }}">{{ article.title | default: article.name | escape }}</a></li>
       {% endif %}
     {% endfor %}
