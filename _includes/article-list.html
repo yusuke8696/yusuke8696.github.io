@@ -1,0 +1,43 @@
+{% assign articles = site.pages | where_exp: 'item', 'item.path contains "articles/"' | sort: 'published_date' | reverse %}
+<section id="articles" class="section" aria-labelledby="articles-heading">
+  <div class="section-heading">
+    <div><h2 id="articles-heading">新着記事</h2><p>公開日の新しい記事から紹介します。</p></div>
+    <a href="#all-articles">全記事一覧へ</a>
+  </div>
+  <div class="article-grid">
+    {% assign shown = 0 %}
+    {% for article in articles %}
+      {% assign prefix = article.path | slice: 0, 9 %}
+      {% assign extension = article.path | split: '.' | last %}{% if prefix == 'articles/' and extension == 'html' %}
+        {% if shown < 6 %}
+        <article class="article-card">
+          {% if article.published_date %}<time class="badge" datetime="{{ article.published_date | escape }}">{{ article.published_date | escape }}</time>{% endif %}
+          <h3><a href="{{ article.url | relative_url | escape }}">{{ article.title | default: article.name | escape }}</a></h3>
+          {% if article.description %}<p>{{ article.description | escape }}</p>{% endif %}
+          <a class="read-more" href="{{ article.url | relative_url | escape }}">記事を読む →</a>
+        </article>
+        {% assign shown = shown | plus: 1 %}
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+<section id="all-articles" class="section" aria-labelledby="all-articles-heading">
+  <div class="section-heading"><h2 id="all-articles-heading">全記事一覧</h2></div>
+  <div class="panel"><ul>
+    {% for article in articles %}
+      {% assign prefix = article.path | slice: 0, 9 %}
+      {% assign extension = article.path | split: '.' | last %}{% if prefix == 'articles/' and extension == 'html' %}
+      <li><a href="{{ article.url | relative_url | escape }}">{{ article.title | default: article.name | escape }}</a></li>
+      {% endif %}
+    {% endfor %}
+    {% comment %}Plain HTML without front matter must also remain discoverable.{% endcomment %}
+    {% assign static_articles = site.static_files | sort: 'path' %}
+    {% for article in static_articles %}
+      {% assign prefix = article.path | slice: 0, 10 %}
+      {% if prefix == '/articles/' and article.extname == '.html' %}
+      <li><a href="{{ article.path | relative_url | escape }}">{{ article.basename | escape }}</a></li>
+      {% endif %}
+    {% endfor %}
+  </ul></div>
+</section>
