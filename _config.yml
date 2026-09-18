@@ -6,6 +6,10 @@ plugins:
 # Only public content belongs in the generated sitemap, not verification files.
 defaults:
   - scope:
+      path: "sitemap.xml"
+    values:
+      permalink: /sitemaps/sitemap.xml
+  - scope:
       path: ""
     values:
       sitemap: false

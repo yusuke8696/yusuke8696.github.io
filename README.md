@@ -4,7 +4,7 @@
 
 ### jekyll-sitemap による自動生成
 
-`_config.yml` で `jekyll-sitemap` を有効にし、GitHub Pagesのビルド時に `https://yusuke8696.github.io/sitemap.xml` を生成します。手書きの同名ファイルは生成を妨げるため削除しました。公開URLは同じです。Search ConsoleでこのURLを送信し、プラグイン方式で取得できるか確認してください。取得成功や順位改善を保証する変更ではありません。
+`_config.yml` で `jekyll-sitemap` を有効にし、GitHub Pagesのビルド時に `https://yusuke8696.github.io/sitemaps/sitemap.xml` を生成します。手書きの同名ファイルは生成を妨げるため削除しました。公開先は `_config.yml` の `permalink` で `/sitemaps/sitemap.xml` に変更し、ルートの `sitemap.xml` は生成しません。`robots.txt` も新しいURLを参照します。フォルダ配下からサイト全体のURLを通知するため、ルートサイトのSearch ConsoleプロパティでこのURLを直接送信し、プラグイン方式で取得できるか確認してください。取得成功や順位改善を保証する変更ではありません。
 
 トップページと `articles/` 配下の公開HTMLが対象です。記事追加時に標準 `sitemap.xml` のURL一覧を手で編集する必要はありません。所有権確認ファイルは引き続き公開しますが、サイトマップには含めません。`.nojekyll` は追加しないでください。
 
