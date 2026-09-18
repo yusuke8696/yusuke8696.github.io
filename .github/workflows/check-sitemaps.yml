@@ -23,7 +23,7 @@ jobs:
           ns = {'s': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
           base = 'https://yusuke8696.github.io/'
           expected = {base} | {base + p.as_posix() for p in Path('articles').rglob('*.html')}
-          for name in ('sitemap.xml', 'sitemap_google.xml', 'sitemap_bing.xml'):
+          for name in ('sitemaps/sitemap.xml', 'sitemap_google.xml', 'sitemap_bing.xml'):
               root = ET.parse(Path('_site') / name).getroot()
               assert root.tag == '{%s}urlset' % ns['s']
               urls = [loc.text for loc in root.findall('s:url/s:loc', ns)]
@@ -40,6 +40,8 @@ jobs:
               assert lastmod is not None and lastmod.text == dates[key]
               datetime.date.fromisoformat(lastmod.text)
           assert not Path('sitemap.xml').exists(), 'Do not shadow plugin-generated sitemap.xml'
+          assert not Path('_site/sitemap.xml').exists(), 'Sitemap must be published under sitemaps/'
+          assert Path('_site/robots.txt').read_text().strip() == 'Sitemap: ' + base + 'sitemaps/sitemap.xml'
           for name in ('BingSiteAuth.xml', 'google5d93088e5855540d.html'):
               assert Path('_site', name).read_bytes() == Path(name).read_bytes()
           print('Plugin and custom sitemaps valid; all articles covered; verification files preserved.')
