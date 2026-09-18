@@ -1,1 +1,1 @@
-Sitemap: https://yusuke8696.github.io/sitemaps/sitemap.xml
+Sitemap: https://yusuke8696.github.io/sitemap.xml
