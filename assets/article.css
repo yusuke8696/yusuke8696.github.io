@@ -1,0 +1,284 @@
+/* ========================================
+   Article common styles
+   GitHub Pages / Blogger 共通
+   ======================================== */
+
+.article-content {
+    color: #202a35;
+    font-family: "Noto Sans JP", "Yu Gothic", sans-serif;
+    line-height: 1.85;
+}
+
+.article-content * {
+    box-sizing: border-box;
+}
+
+.article-content h2,
+.article-content h3 {
+    line-height: 1.4;
+}
+
+.article-content h2 {
+    margin: 0 0 22px;
+    font-size: 27px;
+}
+
+.article-content h3 {
+    margin: 30px 0 10px;
+    font-size: 20px;
+}
+
+.article-content p {
+    margin: 0 0 18px;
+}
+
+.article-content section + section {
+    margin-top: 46px;
+}
+
+.article-content a {
+    color: #0b756c;
+}
+
+
+/* ========================================
+   スペック表
+   ======================================== */
+
+.article-content .specs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    margin: 20px 0 10px;
+    overflow: hidden;
+    border: 1px solid #dbe3e8;
+    background: #dbe3e8;
+}
+
+.article-content .specs div {
+    padding: 13px 16px;
+    background: #fbfcfc;
+}
+
+.article-content .specs dt {
+    color: #657382;
+    font-size: 13px;
+}
+
+.article-content .specs dd {
+    margin: 2px 0 0;
+    font-weight: 700;
+}
+
+
+/* ========================================
+   構成フロー
+   ======================================== */
+
+.article-content .flow {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin: 25px 0;
+}
+
+.article-content .flow div {
+    position: relative;
+    padding: 18px 10px;
+    color: #07534e;
+    background: #e4f3ef;
+    border-radius: 7px;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.article-content .flow div:not(:last-child)::after {
+    position: absolute;
+    top: 50%;
+    right: -9px;
+    color: #0b756c;
+    content: ">";
+    transform: translateY(-50%);
+}
+
+
+/* ========================================
+   コード
+   ======================================== */
+
+.article-content pre {
+    overflow-x: auto;
+    margin: 18px 0 24px;
+    padding: 20px;
+    color: #e8f1f0;
+    background: #18232b;
+    border-radius: 7px;
+    font: 14px/1.7 Consolas, "Courier New", monospace;
+}
+
+.article-content code {
+    padding: 2px 5px;
+    color: #07534e;
+    background: #edf4f2;
+    border-radius: 3px;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: .92em;
+}
+
+.article-content pre code {
+    padding: 0;
+    color: inherit;
+    background: none;
+}
+
+
+/* ========================================
+   注意・補足
+   ======================================== */
+
+.article-content .notice {
+    margin: 22px 0;
+    padding: 18px 20px;
+    background: #ffffff;
+    border: 1px solid #dbe3e8;
+    border-left: 4px solid #0b756c;
+    border-radius: 0 7px 7px 0;
+}
+
+.article-content .notice strong {
+    color: #07534e;
+}
+
+
+/* ========================================
+   アフィリエイト
+   ======================================== */
+
+.article-content .affiliate-box {
+    margin: 26px 0;
+    padding: 20px;
+    background: #fff8e8;
+    border: 1px solid #ead6a4;
+    border-radius: 8px;
+}
+
+.article-content .affiliate-box p {
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.article-content .affiliate-box a {
+    display: inline-block;
+    line-height: normal;
+    text-decoration: none;
+}
+
+.article-content .affiliate-banner-slot {
+    margin: 30px 0;
+    padding: 20px;
+    background: #f6f9fb;
+    border: 1px solid #dbe3e8;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.article-content .affiliate-banner-slot__label {
+    margin: 0 0 14px;
+    font-size: 14px;
+}
+
+.article-content .affiliate-banner-slot__items {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+}
+
+.article-content .affiliate-banner-slot__ad {
+    line-height: 0;
+}
+
+.article-content .affiliate-banner-slot__items a {
+    display: block;
+    line-height: 0;
+}
+
+.article-content .affiliate-banner-slot__items img {
+    max-width: 100%;
+    height: auto;
+}
+
+
+/* ========================================
+   関連記事
+   ======================================== */
+
+.article-content .next-articles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.article-content .next-articles a {
+    display: block;
+    padding: 14px 16px;
+    color: #07534e;
+    background: #e4f3ef;
+    border-radius: 7px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.article-content .next-articles a:hover {
+    text-decoration: underline;
+}
+
+
+/* ========================================
+   リスト
+   ======================================== */
+
+.article-content ul {
+    padding-left: 1.4em;
+}
+
+.article-content li + li {
+    margin-top: 7px;
+}
+
+
+/* ========================================
+   画像
+   ======================================== */
+
+.article-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+
+/* ========================================
+   スマートフォン
+   ======================================== */
+
+@media (max-width: 640px) {
+
+    .article-content .specs,
+    .article-content .flow {
+        grid-template-columns: 1fr;
+    }
+
+    .article-content .next-articles {
+        grid-template-columns: 1fr;
+    }
+
+    .article-content .flow div:not(:last-child)::after {
+        top: auto;
+        right: 50%;
+        bottom: -14px;
+        content: "v";
+        transform: translateX(50%);
+    }
+}
