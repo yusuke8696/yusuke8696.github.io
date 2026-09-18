@@ -8,6 +8,9 @@ on:
         required: true
         default: "articles/local-llm-pc.html"
 
+permissions:
+  contents: write
+
 jobs:
   sync:
     runs-on: ubuntu-latest
