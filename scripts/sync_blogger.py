@@ -256,16 +256,16 @@ def convert_relative_urls(content, article_path):
 
 
 def add_blogger_styles(content):
-    with open(BLOGGER_CSS_FILE, encoding="utf-8") as f:
+    with open("assets/article.css", encoding="utf-8") as f:
         css = f.read()
 
     return (
         "<style>\n"
         + css
         + "\n</style>\n"
-        + '<div class="blogger-article">\n'
+        + '<div class="article-content">\n'
         + content
-        + '\n</div>'
+        + "\n</div>"
     )
 
 
