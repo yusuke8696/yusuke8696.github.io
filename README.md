@@ -2,12 +2,22 @@
 
 ## 検索エンジン別サイトマップ
 
+### jekyll-sitemap による自動生成
+
+`_config.yml` で `jekyll-sitemap` を有効にし、GitHub Pagesのビルド時に `https://yusuke8696.github.io/sitemap.xml` を生成します。手書きの同名ファイルは生成を妨げるため削除しました。公開URLは同じです。Search ConsoleでこのURLを送信し、プラグイン方式で取得できるか確認してください。取得成功や順位改善を保証する変更ではありません。
+
+トップページと `articles/` 配下の公開HTMLが対象です。記事追加時に標準 `sitemap.xml` のURL一覧を手で編集する必要はありません。所有権確認ファイルは引き続き公開しますが、サイトマップには含めません。`.nojekyll` は追加しないでください。
+
+参考: [jekyll-sitemap公式](https://github.com/jekyll/jekyll-sitemap)
+
+### 既存のGoogle用・Bing用
+
 GitHub Pagesの標準Jekyllビルドで次の2ファイルを自動生成します。
 
 - Google Search Console: `https://yusuke8696.github.io/sitemap_google.xml`
 - Bing Webmaster Tools: `https://yusuke8696.github.io/sitemap_bing.xml`
 
-どちらもUTF-8の標準XMLサイトマップです。Google版は `url` 内に `loc` と `lastmod` をそれぞれ改行して記載します。Bing版は従来と同じXML構造を使います。既存の `sitemap.xml` は変更せず残します。
+どちらもUTF-8の標準XMLサイトマップです。Google版は `url` 内に `loc` と `lastmod` をそれぞれ改行して記載します。Bing版は従来と同じXML構造を使います。この2ファイルも比較用に残します。
 
 Google版は `_includes/google-sitemap.xml`、Bing版は `_includes/search-sitemap.xml` を使用し、トップページと `articles/` 以下のHTMLを自動収集します。記事PRが下書きの間は本番に出ず、mainへのマージとPagesビルド後に反映されます。
 
@@ -15,7 +25,7 @@ Google版の更新日は `_data/sitemap_dates.json` で管理します。HTMLを
 
 ソースのXMLにはJekyllのfront matterとLiquidが含まれます。Search Console等にはGitHubのソースURLではなく、上記の公開URLを登録してください。PagesのSourceが「Deploy from a branch」でJekyllを使う標準構成が前提です。`.nojekyll` を追加したり、未ビルドのソースをそのまま配信する設定にすると動作しません。
 
-PRの `Check sitemaps` は実際のPages用JekyllビルドとXML解析、記事網羅性、既存サイトマップの保持を検証します。
+PRの `Check sitemaps` は実際のPages用Jekyllビルドと3種類のXML解析、記事網羅性、所有権確認ファイルの保持を検証します。
 
 既存XMLもGoogleの対応形式です。URLを分けるだけでGoogleの取得エラーが解消する保証はありません。
 

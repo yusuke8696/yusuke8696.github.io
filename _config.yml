@@ -1,0 +1,22 @@
+url: "https://yusuke8696.github.io"
+baseurl: ""
+plugins:
+  - jekyll-sitemap
+
+# Only public content belongs in the generated sitemap, not verification files.
+defaults:
+  - scope:
+      path: ""
+    values:
+      sitemap: false
+  - scope:
+      path: "index.html"
+    values:
+      sitemap: true
+  - scope:
+      path: "articles"
+    values:
+      sitemap: true
+
+exclude:
+  - README.md
