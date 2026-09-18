@@ -337,3 +337,33 @@
     color: #657382;
     font-size: 13px;
 }
+
+/* ========================================
+   チェックリスト
+   ======================================== */
+
+.article-content .checklist {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 22px 0;
+}
+
+.article-content .checklist > div {
+    padding: 16px 18px;
+    background: #f6f9fb;
+    border: 1px solid #dbe3e8;
+    border-radius: 7px;
+}
+
+.article-content .checklist strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #07534e;
+}
+
+@media (max-width: 640px) {
+    .article-content .checklist {
+        grid-template-columns: 1fr;
+    }
+}
