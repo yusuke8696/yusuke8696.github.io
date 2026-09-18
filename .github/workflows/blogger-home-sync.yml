@@ -1,0 +1,66 @@
+name: Blogger Home Sync
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "index.html"
+      - "_includes/article-list.html"
+      - "_config.yml"
+      - "assets/**"
+      - "scripts/sync_blogger_page.py"
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-home:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+
+      - name: Build Jekyll
+        run: bundle exec jekyll build
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install requests
+
+      - name: Sync Blogger home page
+        env:
+          BLOGGER_CLIENT_ID: ${{ secrets.BLOGGER_CLIENT_ID }}
+          BLOGGER_CLIENT_SECRET: ${{ secrets.BLOGGER_CLIENT_SECRET }}
+          BLOGGER_REFRESH_TOKEN: ${{ secrets.BLOGGER_REFRESH_TOKEN }}
+          BLOGGER_BLOG_ID: ${{ secrets.BLOGGER_BLOG_ID }}
+        run: python scripts/sync_blogger_page.py _site/index.html
+
+      - name: Save Blogger page mapping
+        run: |
+          if git diff --quiet -- blogger-pages.json; then
+            echo "No mapping changes."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add blogger-pages.json
+          git commit -m "Update Blogger page mapping"
+          git push
