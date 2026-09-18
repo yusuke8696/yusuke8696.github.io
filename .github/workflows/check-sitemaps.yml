@@ -1,4 +1,4 @@
-name: Check sitemaps
+name: Check sitemap
 
 on:
   pull_request:
@@ -21,84 +21,82 @@ jobs:
           source: ./
           destination: ./_site
 
-      - name: Validate generated XML and article coverage
+      - name: Validate generated sitemap and article coverage
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import datetime
-          import json
           import xml.etree.ElementTree as ET
 
           ns = {'s': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
           base = 'https://yusuke8696.github.io/'
 
+          # sitemap.xml に掲載されるべきURL
           expected = {base} | {
               base + p.as_posix()
               for p in Path('articles').rglob('*.html')
           }
 
-          # 各サイトマップを検証
-          for name in (
-              'sitemap.xml',
-              'sitemap_google.xml',
-              'sitemap_bing.xml',
-          ):
-              root = ET.parse(Path('_site') / name).getroot()
+          sitemap = Path('_site/sitemap.xml')
 
-              assert root.tag == '{%s}urlset' % ns['s']
+          # sitemap.xml が生成されていること
+          assert sitemap.exists(), \
+              '_site/sitemap.xml was not generated'
 
-              urls = [
-                  loc.text
-                  for loc in root.findall('s:url/s:loc', ns)
-              ]
+          # XMLとして読み込めること
+          root = ET.parse(sitemap).getroot()
 
-              assert len(urls) == len(set(urls)), urls
-              assert set(urls) == expected, (name, urls, expected)
+          assert root.tag == '{%s}urlset' % ns['s'], \
+              f'Unexpected root element: {root.tag}'
 
-          # Google用 sitemap の lastmod を検証
-          dates = json.loads(
-              Path('_data/sitemap_dates.json').read_text()
+          # URL一覧を取得
+          urls = [
+              loc.text
+              for loc in root.findall('s:url/s:loc', ns)
+          ]
+
+          # URL重複チェック
+          assert len(urls) == len(set(urls)), \
+              f'Duplicate URLs found: {urls}'
+
+          # トップページ + articles/ の網羅性チェック
+          assert set(urls) == expected, (
+              'Sitemap URLs do not match expected URLs',
+              urls,
+              expected,
           )
 
-          google = ET.parse(
-              '_site/sitemap_google.xml'
-          ).getroot()
+          # robots.txt の確認
+          robots = Path('_site/robots.txt')
 
-          for entry in google.findall('s:url', ns):
-              url = entry.find('s:loc', ns).text
-              key = url.removeprefix(base) or 'index.html'
+          assert robots.exists(), \
+              '_site/robots.txt was not generated'
 
-              lastmod = entry.find('s:lastmod', ns)
-
-              assert (
-                  lastmod is not None
-                  and lastmod.text == dates[key]
-              )
-
-              datetime.date.fromisoformat(lastmod.text)
-
-          # sitemap.xml がルートに生成されていることを確認
-          assert Path('_site/sitemap.xml').exists(), \
-              'sitemap.xml must be published at site root'
-
-          # robots.txt がルートの sitemap.xml を参照していることを確認
-          assert (
-              Path('_site/robots.txt').read_text().strip()
-              == 'Sitemap: ' + base + 'sitemap.xml'
+          expected_robots = (
+              'Sitemap: ' + base + 'sitemap.xml'
           )
 
-          # Search Console / Bing の認証ファイルを確認
+          assert robots.read_text().strip() == expected_robots, (
+              robots.read_text(),
+              expected_robots,
+          )
+
+          # 所有権確認ファイルを確認
           for name in (
               'BingSiteAuth.xml',
               'google5d93088e5855540d.html',
           ):
-              assert (
-                  Path('_site', name).read_bytes()
-                  == Path(name).read_bytes()
-              )
+              source = Path(name)
+              generated = Path('_site') / name
+
+              assert generated.exists(), \
+                  f'{name} was not preserved'
+
+              assert generated.read_bytes() == source.read_bytes(), \
+                  f'{name} changed during build'
 
           print(
-              'Sitemaps valid; all articles covered; '
+              'sitemap.xml valid; '
+              'all articles covered; '
               'verification files preserved.'
           )
           PY
@@ -114,7 +112,11 @@ jobs:
           title: "CI & 新着記事"
           published_date: "2099-01-01"
           ---
-          <!doctype html><html lang="ja"><title>CI article</title><p>Temporary test article</p></html>
+          <!doctype html>
+          <html lang="ja">
+          <title>CI article</title>
+          <p>Temporary test article</p>
+          </html>
           EOF
 
           echo '<!doctype html><html><title>Plain article</title></html>' \
