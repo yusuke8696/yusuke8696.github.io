@@ -1,12 +1,20 @@
 name: Blogger Sync
 
 on:
+  # mainの記事変更時に自動実行
+  push:
+    branches:
+      - main
+    paths:
+      - "articles/**/*.html"
+
+  # 手動実行も残す
   workflow_dispatch:
     inputs:
       article:
-        description: "Article path"
-        required: true
-        default: "articles/local-llm-pc.html"
+        description: "Article path (empty = all articles)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -16,22 +24,87 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Sync to Blogger
+      # -----------------------------
+      # 自動実行の場合
+      # mainへのpushで変更された記事を取得
+      # -----------------------------
+      - name: Detect changed articles
+        if: github.event_name == 'push'
+        id: changed
+        shell: bash
+        run: |
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+
+          git diff --name-only --diff-filter=AM "$BEFORE" "$AFTER" \
+            | grep '^articles/.*\.html$' \
+            > /tmp/changed_articles.txt || true
+
+          echo "Changed articles:"
+          cat /tmp/changed_articles.txt
+
+      # -----------------------------
+      # 自動同期
+      # -----------------------------
+      - name: Sync changed articles
+        if: github.event_name == 'push'
         env:
           BLOGGER_CLIENT_ID: ${{ secrets.BLOGGER_CLIENT_ID }}
           BLOGGER_CLIENT_SECRET: ${{ secrets.BLOGGER_CLIENT_SECRET }}
           BLOGGER_REFRESH_TOKEN: ${{ secrets.BLOGGER_REFRESH_TOKEN }}
           BLOGGER_BLOG_ID: ${{ secrets.BLOGGER_BLOG_ID }}
+        shell: bash
         run: |
-          python scripts/sync_blogger.py "${{ inputs.article }}"
-          
+          while IFS= read -r article; do
+            [ -z "$article" ] && continue
+
+            echo "Syncing: $article"
+            python scripts/sync_blogger.py "$article"
+
+          done < /tmp/changed_articles.txt
+
+      # -----------------------------
+      # 手動同期
+      # article指定あり → その記事だけ
+      # article指定なし → 全記事
+      # -----------------------------
+      - name: Manual sync
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          BLOGGER_CLIENT_ID: ${{ secrets.BLOGGER_CLIENT_ID }}
+          BLOGGER_CLIENT_SECRET: ${{ secrets.BLOGGER_CLIENT_SECRET }}
+          BLOGGER_REFRESH_TOKEN: ${{ secrets.BLOGGER_REFRESH_TOKEN }}
+          BLOGGER_BLOG_ID: ${{ secrets.BLOGGER_BLOG_ID }}
+        shell: bash
+        run: |
+          ARTICLE="${{ inputs.article }}"
+
+          if [ -n "$ARTICLE" ]; then
+            echo "Syncing: $ARTICLE"
+            python scripts/sync_blogger.py "$ARTICLE"
+          else
+            find articles -type f -name '*.html' -print0 \
+              | while IFS= read -r -d '' article; do
+                  echo "Syncing: $article"
+                  python scripts/sync_blogger.py "$article"
+                done
+          fi
+
+      # -----------------------------
+      # Blogger Post IDの対応表を保存
+      # -----------------------------
       - name: Save Blogger post mapping
+        shell: bash
         run: |
           if git diff --quiet blogger-posts.json; then
             echo "No mapping changes"
@@ -39,7 +112,8 @@ jobs:
           fi
 
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add blogger-posts.json
           git commit -m "Update Blogger post mapping"
