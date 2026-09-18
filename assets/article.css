@@ -294,29 +294,31 @@
     -webkit-overflow-scrolling: touch;
 }
 
-.article-content .comparison {
+.article-content table.comparison {
     width: 100%;
     min-width: 720px;
-    border-collapse: collapse;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    border: 1px solid #dbe3e8 !important;
     background: #ffffff;
     font-size: 14px;
 }
 
-.article-content .comparison th,
-.article-content .comparison td {
-    padding: 12px 14px;
-    border: 1px solid #dbe3e8;
+.article-content table.comparison th,
+.article-content table.comparison td {
+    padding: 12px 14px !important;
+    border: 1px solid #dbe3e8 !important;
     text-align: center;
     vertical-align: middle;
 }
 
-.article-content .comparison thead th {
+.article-content table.comparison thead th {
     color: #ffffff;
     background: #0b756c;
     font-weight: 700;
 }
 
-.article-content .comparison tbody th {
+.article-content table.comparison tbody th {
     color: #07534e;
     background: #e4f3ef;
     font-weight: 700;
@@ -324,11 +326,11 @@
     white-space: nowrap;
 }
 
-.article-content .comparison tbody tr:nth-child(even) td {
+.article-content table.comparison tbody tr:nth-child(even) td {
     background: #f6f9fb;
 }
 
-.article-content .comparison strong {
+.article-content table.comparison strong {
     color: #07534e;
 }
 
