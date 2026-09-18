@@ -282,3 +282,58 @@
         transform: translateX(50%);
     }
 }
+
+/* ========================================
+   比較表
+   ======================================== */
+
+.article-content .comparison-wrap {
+    width: 100%;
+    margin: 24px 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.article-content .comparison {
+    width: 100%;
+    min-width: 720px;
+    border-collapse: collapse;
+    background: #ffffff;
+    font-size: 14px;
+}
+
+.article-content .comparison th,
+.article-content .comparison td {
+    padding: 12px 14px;
+    border: 1px solid #dbe3e8;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.article-content .comparison thead th {
+    color: #ffffff;
+    background: #0b756c;
+    font-weight: 700;
+}
+
+.article-content .comparison tbody th {
+    color: #07534e;
+    background: #e4f3ef;
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.article-content .comparison tbody tr:nth-child(even) td {
+    background: #f6f9fb;
+}
+
+.article-content .comparison strong {
+    color: #07534e;
+}
+
+.article-content .caption {
+    margin-top: -12px;
+    color: #657382;
+    font-size: 13px;
+}
