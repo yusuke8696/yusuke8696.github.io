@@ -1,4 +1,0 @@
-https://yusuke8696.github.io/
-https://yusuke8696.github.io/articles/ai-tool-comparison.html
-https://yusuke8696.github.io/articles/local-llm-pc.html
-https://yusuke8696.github.io/articles/qwen-install.html
