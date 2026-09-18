@@ -8,7 +8,7 @@ defaults:
   - scope:
       path: "sitemap.xml"
     values:
-      permalink: /sitemaps/sitemap.xml
+      permalink: /sitemap.xml
   - scope:
       path: ""
     values:
