@@ -1,0 +1,34 @@
+name: Test Blogger Sync
+on:
+  pull_request:
+    paths:
+      - 'scripts/sync_blogger*.py'
+      - 'tests/**'
+      - '.github/workflows/*blogger*.yml'
+      - 'index.html'
+      - '_includes/**'
+      - '_config.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s tests -v
+      - uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+      - name: Validate rendered home without Blogger credentials
+        run: |
+          PYTHONPATH=scripts python - <<'PY'
+          from pathlib import Path
+          from sync_blogger_page import prepare_page
+          title, content = prepare_page(Path('_site/index.html').read_text())
+          assert title and 'articles/' in content
+          print('Rendered home parsed successfully')
+          PY
