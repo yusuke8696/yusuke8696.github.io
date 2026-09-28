@@ -1,120 +1,117 @@
 name: Blogger Sync
 
 on:
-  # mainの記事変更時に自動実行
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
-      - "articles/**/*.html"
-
-  # 手動実行も残す
+      - 'articles/**/*.html'
+      - 'index.html'
+      - '_includes/**'
+      - '_data/**'
+      - '_config.yml'
+      - 'assets/**'
+      - 'scripts/sync_blogger*.py'
+      - '.github/workflows/blogger-sync.yml'
   workflow_dispatch:
     inputs:
       article:
-        description: "Article path (empty = all articles)"
+        description: 'Article path (empty = all articles; ignored for pages)'
         required: false
-        default: ""
+        default: ''
+      target:
+        description: 'Sync target'
+        type: choice
+        options: [all, posts, pages]
+        default: all
 
 permissions:
   contents: write
 
+# Never cancel an in-flight insert. All runs use the latest saved mappings.
+concurrency:
+  group: blogger-sync-main
+  cancel-in-progress: false
+
 jobs:
   sync:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
+      - name: Checkout latest main including saved IDs
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: '3.12'
 
-      # -----------------------------
-      # 自動実行の場合
-      # mainへのpushで変更された記事を取得
-      # -----------------------------
-      - name: Detect changed articles
-        if: github.event_name == 'push'
-        id: changed
-        shell: bash
-        run: |
-          BEFORE="${{ github.event.before }}"
-          AFTER="${{ github.sha }}"
+      - name: Test sync without credentials
+        id: tests
+        run: python -m unittest discover -s tests -v
 
-          git diff --name-only --diff-filter=AM "$BEFORE" "$AFTER" \
-            | grep '^articles/.*\.html$' \
-            > /tmp/changed_articles.txt || true
+      - name: Build with GitHub Pages Jekyll
+        if: github.event_name == 'push' || inputs.target != 'posts'
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
 
-          echo "Changed articles:"
-          cat /tmp/changed_articles.txt
-
-      # -----------------------------
-      # 自動同期
-      # -----------------------------
-      - name: Sync changed articles
-        if: github.event_name == 'push'
+      - name: Sync Blogger home page
+        if: github.event_name == 'push' || inputs.target != 'posts'
         env:
           BLOGGER_CLIENT_ID: ${{ secrets.BLOGGER_CLIENT_ID }}
           BLOGGER_CLIENT_SECRET: ${{ secrets.BLOGGER_CLIENT_SECRET }}
           BLOGGER_REFRESH_TOKEN: ${{ secrets.BLOGGER_REFRESH_TOKEN }}
           BLOGGER_BLOG_ID: ${{ secrets.BLOGGER_BLOG_ID }}
-        shell: bash
-        run: |
-          while IFS= read -r article; do
-            [ -z "$article" ] && continue
+        run: python scripts/sync_blogger_page.py _site/index.html
 
-            echo "Syncing: $article"
-            python scripts/sync_blogger.py "$article"
-
-          done < /tmp/changed_articles.txt
-
-      # -----------------------------
-      # 手動同期
-      # article指定あり → その記事だけ
-      # article指定なし → 全記事
-      # -----------------------------
-      - name: Manual sync
-        if: github.event_name == 'workflow_dispatch'
+      - name: Sync articles
+        if: ${{ !cancelled() && steps.tests.outcome == 'success' && (github.event_name == 'push' || inputs.target != 'pages') }}
         env:
           BLOGGER_CLIENT_ID: ${{ secrets.BLOGGER_CLIENT_ID }}
           BLOGGER_CLIENT_SECRET: ${{ secrets.BLOGGER_CLIENT_SECRET }}
           BLOGGER_REFRESH_TOKEN: ${{ secrets.BLOGGER_REFRESH_TOKEN }}
           BLOGGER_BLOG_ID: ${{ secrets.BLOGGER_BLOG_ID }}
+          ARTICLE: ${{ inputs.article }}
         shell: bash
         run: |
-          ARTICLE="${{ inputs.article }}"
-
           if [ -n "$ARTICLE" ]; then
-            echo "Syncing: $ARTICLE"
             python scripts/sync_blogger.py "$ARTICLE"
           else
-            find articles -type f -name '*.html' -print0 \
-              | while IFS= read -r -d '' article; do
-                  echo "Syncing: $article"
-                  python scripts/sync_blogger.py "$article"
-                done
+            # Reconcile latest main even if GitHub coalesces pending push runs.
+            while IFS= read -r -d '' article; do
+              python scripts/sync_blogger.py "$article"
+            done < <(find articles -type f -name '*.html' -print0)
           fi
 
-      # -----------------------------
-      # Blogger Post IDの対応表を保存
-      # -----------------------------
-      - name: Save Blogger post mapping
+      - name: Save Blogger mappings even after partial failure
+        if: ${{ always() && !cancelled() }}
         shell: bash
         run: |
-          if git diff --quiet blogger-posts.json; then
-            echo "No mapping changes"
+          git add blogger-posts.json blogger-pages.json
+          if git diff --cached --quiet; then
+            echo 'No mapping changes'
             exit 0
           fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Update Blogger ID mappings'
+          for attempt in 1 2 3; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+          done
+          exit 1
 
-          git config user.name "github-actions[bot]"
-          git config user.email \
-            "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add blogger-posts.json
-          git commit -m "Update Blogger post mapping"
-          git push
+      - name: Keep mapping recovery copy
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blogger-id-mappings
+          path: |
+            blogger-posts.json
+            blogger-pages.json

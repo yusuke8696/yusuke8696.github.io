@@ -1,254 +1,114 @@
+"""Sync the rendered home page; credentials and HTTP helpers match Posts."""
+
+import argparse
+import html as html_module
 import json
 import os
 import re
-import sys
+from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import urljoin
+from urllib.parse import urlencode
 
-import requests
+from sync_blogger import (
+    SITE_BASE_URL, convert_relative_urls, get_access_token,
+    load_mapping, request, save_mapping,
+)
 
-
-SITE_URL = "https://yusuke8696.github.io/"
-MAPPING_FILE = Path("blogger-pages.json")
-
-CLIENT_ID = os.environ["BLOGGER_CLIENT_ID"]
-CLIENT_SECRET = os.environ["BLOGGER_CLIENT_SECRET"]
-REFRESH_TOKEN = os.environ["BLOGGER_REFRESH_TOKEN"]
-BLOG_ID = os.environ["BLOGGER_BLOG_ID"]
+MAPPING_FILE = "blogger-pages.json"
+SOURCE = SITE_BASE_URL + "index.html"
 
 
-def get_access_token():
-    response = requests.post(
-        "https://oauth2.googleapis.com/token",
-        data={
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-            "refresh_token": REFRESH_TOKEN,
-            "grant_type": "refresh_token",
-        },
-        timeout=30,
-    )
-    response.raise_for_status()
-    return response.json()["access_token"]
-
-
-def load_mapping():
-    if not MAPPING_FILE.exists():
-        return {}
-
-    with MAPPING_FILE.open(encoding="utf-8") as f:
-        return json.load(f)
-
-
-def save_mapping(mapping):
-    with MAPPING_FILE.open("w", encoding="utf-8") as f:
-        json.dump(
-            mapping,
-            f,
-            ensure_ascii=False,
-            indent=2,
-        )
-        f.write("\n")
-
-
-def extract_title(html):
-    match = re.search(
-        r"<title[^>]*>(.*?)</title>",
-        html,
-        flags=re.IGNORECASE | re.DOTALL,
+def prepare_page(html):
+    if re.search(r"\{%|\{\{", html):
+        raise ValueError("Unrendered Liquid: build Jekyll and use _site/index.html")
+    title = re.search(r"<title\b[^>]*>(.*?)</title>", html, re.I | re.S)
+    body = re.search(r"<body\b[^>]*>(.*?)</body>", html, re.I | re.S)
+    if not title or not title.group(1).strip() or not body or not body.group(1).strip():
+        raise ValueError("Rendered page must contain a nonempty title and body")
+    head = re.search(r"<head\b[^>]*>(.*?)</head>", html, re.I | re.S)
+    styles = re.findall(r"<style\b[^>]*>.*?</style>", head.group(1) if head else "", re.I | re.S)
+    content = convert_relative_urls("\n".join(styles) + "\n" + body.group(1), "index.html")
+    return html_module.unescape(title.group(1).strip()), (
+        f'<div class="github-home" data-blogger-source="{SOURCE}">\n{content}\n</div>'
     )
 
-    if not match:
-        return "AI・PC活用ブログ"
 
-    title = re.sub(r"<[^>]+>", "", match.group(1))
-    return title.strip()
+class SourceParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.matches = False
 
-
-def extract_body(html):
-    match = re.search(
-        r"<body[^>]*>(.*?)</body>",
-        html,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
-
-    if not match:
-        raise RuntimeError("<body> が見つかりません。")
-
-    return match.group(1).strip()
-
-
-def extract_styles(html):
-    styles = re.findall(
-        r"<style[^>]*>(.*?)</style>",
-        html,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
-
-    if not styles:
-        return ""
-
-    return "<style>\n" + "\n".join(styles) + "\n</style>\n"
-
-
-def absolutize_urls(content):
-    def replace_attr(match):
-        attribute = match.group(1)
-        quote = match.group(2)
-        value = match.group(3)
-
-        # 変更しないURL
-        if (
-            value.startswith(("http://", "https://", "//"))
-            or value.startswith(("#", "mailto:", "tel:", "javascript:", "data:"))
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        # Recognize pages created by the old script as well as the new marker.
+        if attrs.get("data-blogger-source") == SOURCE or (
+            tag == "div" and "github-home" in (attrs.get("class") or "").split()
         ):
-            return match.group(0)
+            self.matches = True
 
-        absolute = urljoin(SITE_URL, value)
 
-        return f"{attribute}={quote}{absolute}{quote}"
+def find_existing_page(blog_id, token):
+    matches = set()
+    for status in ("live", "draft", "imported"):
+        query = urlencode({"view": "ADMIN", "fetchBodies": "true", "status": status})
+        result = request(
+            f"https://www.googleapis.com/blogger/v3/blogs/{blog_id}/pages?{query}",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        for page in result.get("items", []):
+            parser = SourceParser()
+            parser.feed(page.get("content", ""))
+            if parser.matches:
+                matches.add(str(page["id"]))
+    if len(matches) > 1:
+        raise RuntimeError("Multiple home pages found; select the intended ID in blogger-pages.json")
+    return next(iter(matches), None)
 
-    return re.sub(
-        r"""(href|src)\s*=\s*(["'])(.*?)\2""",
-        replace_attr,
-        content,
-        flags=re.IGNORECASE,
+
+def write_page(blog_id, token, title, content, page_id=None):
+    endpoint = f"https://www.googleapis.com/blogger/v3/blogs/{blog_id}/pages"
+    return request(
+        endpoint + (f"/{page_id}" if page_id else ""),
+        data=json.dumps({"title": title, "content": content}).encode("utf-8"),
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        method="PUT" if page_id else "POST",
     )
 
 
-def prepare_content(html):
-    styles = extract_styles(html)
-    body = extract_body(html)
-
-    content = styles + body
-    content = absolutize_urls(content)
-
-    return f"""
-<div class="github-home">
-{content}
-</div>
-""".strip()
-
-
-def create_page(access_token, title, content):
-    url = (
-        f"https://www.googleapis.com/blogger/v3/"
-        f"blogs/{BLOG_ID}/pages/"
-    )
-
-    response = requests.post(
-        url,
-        headers={
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json",
-        },
-        params={
-            "isDraft": "false",
-        },
-        json={
-            "title": title,
-            "content": content,
-        },
-        timeout=30,
-    )
-
-    response.raise_for_status()
-    return response.json()
-
-
-def update_page(access_token, page_id, title, content):
-    url = (
-        f"https://www.googleapis.com/blogger/v3/"
-        f"blogs/{BLOG_ID}/pages/{page_id}"
-    )
-
-    response = requests.put(
-        url,
-        headers={
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json",
-        },
-        json={
-            "id": page_id,
-            "blog": {
-                "id": BLOG_ID,
-            },
-            "title": title,
-            "content": content,
-        },
-        timeout=30,
-    )
-
-    response.raise_for_status()
-    return response.json()
+def sync_page(html_path, mapping_file=MAPPING_FILE):
+    title, content = prepare_page(Path(html_path).read_text(encoding="utf-8"))
+    mapping = load_mapping(mapping_file)
+    if not isinstance(mapping, dict) or any(
+        not isinstance(value, str) or not value.isdigit() for value in mapping.values()
+    ):
+        raise ValueError("Page mapping must be an object of path: numeric ID strings")
+    token = get_access_token()
+    blog_id = os.environ["BLOGGER_BLOG_ID"]
+    page_id = mapping.get("index.html")
+    if not page_id:
+        page_id = find_existing_page(blog_id, token)
+        if page_id:
+            mapping["index.html"] = page_id
+            save_mapping(mapping_file, mapping)
+    # Fail on 404/auth/network errors: never silently replace a mapped Page.
+    # Inserts are not retried. A later run recovers their source marker.
+    result = write_page(blog_id, token, title, content, page_id)
+    result_id = str(result["id"])
+    if not result_id.isdigit() or (page_id and page_id != result_id):
+        raise RuntimeError("Blogger returned an unexpected Page ID")
+    if mapping.get("index.html") != result_id:
+        mapping["index.html"] = result_id
+        save_mapping(mapping_file, mapping)
+    print(f"Blogger Page ID: {result_id}")
+    print(f"Blogger Page URL: {result.get('url', '(unknown)')}")
+    return result
 
 
 def main():
-    html_path = Path(
-        sys.argv[1] if len(sys.argv) > 1 else "_site/index.html"
-    )
-
-    if not html_path.exists():
-        raise FileNotFoundError(
-            f"{html_path} が見つかりません。"
-            "Jekyllを先にビルドしてください。"
-        )
-
-    html = html_path.read_text(encoding="utf-8")
-
-    title = extract_title(html)
-    content = prepare_content(html)
-
-    mapping = load_mapping()
-    page_id = mapping.get("index.html")
-
-    access_token = get_access_token()
-
-    if page_id:
-        print(f"Updating Blogger page: {page_id}")
-
-        try:
-            result = update_page(
-                access_token,
-                page_id,
-                title,
-                content,
-            )
-
-        except requests.HTTPError as e:
-            # Blogger側で手動削除された場合は作り直す
-            if e.response is not None and e.response.status_code == 404:
-                print(
-                    "Mapped Blogger page was not found. "
-                    "Creating a new page."
-                )
-
-                result = create_page(
-                    access_token,
-                    title,
-                    content,
-                )
-
-                mapping["index.html"] = result["id"]
-                save_mapping(mapping)
-
-            else:
-                raise
-
-    else:
-        print("Creating Blogger home page.")
-
-        result = create_page(
-            access_token,
-            title,
-            content,
-        )
-
-        mapping["index.html"] = result["id"]
-        save_mapping(mapping)
-
-    print(f"Blogger Page ID: {result['id']}")
-    print(f"Blogger Page URL: {result.get('url', '(unknown)')}")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("html_path", nargs="?", default="_site/index.html")
+    args = parser.parse_args()
+    sync_page(args.html_path)
 
 
 if __name__ == "__main__":
