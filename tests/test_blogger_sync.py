@@ -111,6 +111,17 @@ class PageTests(unittest.TestCase):
 
 
 class PostRegressionTests(unittest.TestCase):
+    def test_add_blogger_jump_break_before_first_affiliate_banner(self):
+        content = '<section><p>intro</p></section><div class="affiliate-banner-slot">ad</div><section>rest</section>'
+        result = posts.add_blogger_jump_break(content)
+        self.assertIn('</section><!--more-->\n<div class="affiliate-banner-slot">', result)
+        self.assertEqual(result.count("<!--more-->"), 1)
+
+    def test_add_blogger_jump_break_is_noop_without_banner_or_when_already_present(self):
+        self.assertEqual(posts.add_blogger_jump_break("<section>body</section>"), "<section>body</section>")
+        existing = 'intro<!--more--><div class="affiliate-banner-slot">ad</div>'
+        self.assertEqual(posts.add_blogger_jump_break(existing), existing)
+
     def test_existing_api_contract(self):
         with patch.object(posts, "request", return_value={"id": "9"}) as api:
             posts.create_post("123", "fake", "Title", "Body")

@@ -255,6 +255,16 @@ def convert_relative_urls(content, article_path):
     return "".join(converter.output)
 
 
+def add_blogger_jump_break(content):
+    """Bloggerの一覧ページでは広告バナーより前の本文だけを抜粋表示する。"""
+    marker = '<div class="affiliate-banner-slot">'
+
+    if "<!--more-->" in content or marker not in content:
+        return content
+
+    return content.replace(marker, "<!--more-->\n" + marker, 1)
+
+
 def add_blogger_styles(content):
     with open("assets/article.css", encoding="utf-8") as f:
         css = f.read()
@@ -334,6 +344,10 @@ def main():
         content,
         article_path,
     )
+
+    # 記事一覧で最初の広告画像が大きく表示されないよう、
+    # 最初の広告枠の直前をBloggerの抜粋境界にする。
+    content = add_blogger_jump_break(content)
 
     content = add_blogger_styles(content)
 
